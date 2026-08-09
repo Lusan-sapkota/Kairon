@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import './App.css';
 import {api} from './api';
 import {Sidebar} from './components/Sidebar';
@@ -28,18 +28,18 @@ function App() {
     const [toast, setToast] = useState('');
     const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
 
-    async function refreshAll() {
+    const refreshAll = useCallback(async () => {
         const [p, t, n] = await Promise.all([api.listProjects(), api.listTasks(), api.listNotes()]);
         setProjects(p);
         setTasks(t);
         setNotes(n);
-    }
+    }, []);
 
     useEffect(() => {
         refreshAll()
             .catch((err) => setError(String(err)))
             .finally(() => setLoading(false));
-    }, []);
+    }, [refreshAll]);
 
     useEffect(() => {
         if (!toast) return;
@@ -62,146 +62,174 @@ function App() {
                 fittedFor = settled;
                 api.refitWindow(window.screen.width, window.screen.height).catch(() => {});
             }, 700);
-        }, 250);
+        }, 1000);
         return () => {
             window.clearInterval(interval);
             window.clearTimeout(debounceTimer);
         };
     }, []);
 
-    async function withErrorHandling(fn: () => Promise<void>) {
+    const withErrorHandling = useCallback(async (fn: () => Promise<void>) => {
         try {
             await fn();
         } catch (err) {
             setError(typeof err === 'string' ? err : 'Something went wrong');
         }
-    }
+    }, []);
 
-    function handleAddTask(input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) {
-        withErrorHandling(async () => {
-            await api.createTask(input);
-            setTasks(await api.listTasks());
-        });
-    }
+    const handleAddTask = useCallback(
+        (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => {
+            withErrorHandling(async () => {
+                await api.createTask(input);
+                setTasks(await api.listTasks());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function handleToggleTask(id: number) {
-        withErrorHandling(async () => {
-            await api.toggleTask(id);
-            setTasks(await api.listTasks());
-        });
-    }
+    const handleToggleTask = useCallback(
+        (id: number) => {
+            withErrorHandling(async () => {
+                await api.toggleTask(id);
+                setTasks(await api.listTasks());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function performDeleteTask(id: number) {
-        withErrorHandling(async () => {
-            await api.deleteTask(id);
-            setTasks(await api.listTasks());
-            if (selectedTaskId === id) setSelectedTaskId(null);
-        });
-    }
+    const handleDeleteTask = useCallback(
+        (id: number) => {
+            setPendingConfirm({
+                title: 'Delete task',
+                message: `Delete "${tasks.find((t) => t.id === id)?.title ?? 'this task'}"? This can't be undone.`,
+                onConfirm: () => {
+                    withErrorHandling(async () => {
+                        await api.deleteTask(id);
+                        setTasks(await api.listTasks());
+                        setSelectedTaskId((cur) => (cur === id ? null : cur));
+                    });
+                },
+            });
+        },
+        [tasks, withErrorHandling]
+    );
 
-    function handleDeleteTask(id: number) {
-        const task = tasks.find((t) => t.id === id);
-        setPendingConfirm({
-            title: 'Delete task',
-            message: `Delete "${task?.title ?? 'this task'}"? This can't be undone.`,
-            onConfirm: () => performDeleteTask(id),
-        });
-    }
+    const handleSelectTask = useCallback((task: Task) => {
+        setSelectedTaskId(task.id);
+    }, []);
 
-    function handleSaveTask(input: {id: number; title: string; notes: string; dueDate?: string; priority: number; projectId?: number}) {
-        withErrorHandling(async () => {
-            await api.updateTask(input);
-            setTasks(await api.listTasks());
-        });
-    }
+    const handleSaveTask = useCallback(
+        (input: {id: number; title: string; notes: string; dueDate?: string; priority: number; projectId?: number}) => {
+            withErrorHandling(async () => {
+                await api.updateTask(input);
+                setTasks(await api.listTasks());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function handleMoveTaskDate(id: number, dueDate: string | undefined, sortOrder: number) {
-        setTasks((prev) => prev.map((t) => (t.id === id ? {...t, dueDate, sortOrder} : t)));
-        withErrorHandling(async () => {
-            await api.setTaskDueDate(id, dueDate, sortOrder);
-            setTasks(await api.listTasks());
-        });
-    }
+    const handleMoveTaskDate = useCallback(
+        (id: number, dueDate: string | undefined, sortOrder: number) => {
+            setTasks((prev) => prev.map((t) => (t.id === id ? {...t, dueDate, sortOrder} : t)));
+            withErrorHandling(async () => {
+                await api.setTaskDueDate(id, dueDate, sortOrder);
+                setTasks(await api.listTasks());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function handleMoveTaskProject(id: number, projectId: number | undefined, sortOrder: number) {
-        setTasks((prev) => prev.map((t) => (t.id === id ? {...t, projectId, sortOrder} : t)));
-        withErrorHandling(async () => {
-            await api.setTaskProject(id, projectId, sortOrder);
-            setTasks(await api.listTasks());
-        });
-    }
+    const handleMoveTaskProject = useCallback(
+        (id: number, projectId: number | undefined, sortOrder: number) => {
+            setTasks((prev) => prev.map((t) => (t.id === id ? {...t, projectId, sortOrder} : t)));
+            withErrorHandling(async () => {
+                await api.setTaskProject(id, projectId, sortOrder);
+                setTasks(await api.listTasks());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function handleAddProject(name: string, color: string, tags: string) {
-        withErrorHandling(async () => {
-            await api.createProject(name, color, tags);
-            setProjects(await api.listProjects());
-        });
-    }
+    const handleAddProject = useCallback(
+        (name: string, color: string, tags: string) => {
+            withErrorHandling(async () => {
+                await api.createProject(name, color, tags);
+                setProjects(await api.listProjects());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function handleUpdateProject(id: number, name: string, color: string, tags: string) {
-        withErrorHandling(async () => {
-            await api.updateProject(id, name, color, tags);
-            setProjects(await api.listProjects());
-        });
-    }
+    const handleUpdateProject = useCallback(
+        (id: number, name: string, color: string, tags: string) => {
+            withErrorHandling(async () => {
+                await api.updateProject(id, name, color, tags);
+                setProjects(await api.listProjects());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function performDeleteProject(id: number) {
-        withErrorHandling(async () => {
-            await api.deleteProject(id);
-            await refreshAll();
-            if (view.kind === 'project' && view.projectId === id) {
-                setView({kind: 'all'});
-            }
-        });
-    }
+    const handleDeleteProject = useCallback(
+        (id: number) => {
+            const project = projects.find((p) => p.id === id);
+            const taskCount = tasks.filter((t) => t.projectId === id).length;
+            const impact = taskCount > 0 ? ` ${taskCount} task${taskCount === 1 ? '' : 's'} will be moved to Inbox.` : '';
+            setPendingConfirm({
+                title: 'Delete project',
+                message: `Delete "${project?.name ?? 'this project'}"?${impact} This can't be undone.`,
+                onConfirm: () => {
+                    withErrorHandling(async () => {
+                        await api.deleteProject(id);
+                        await refreshAll();
+                        setView((v) => (v.kind === 'project' && v.projectId === id ? {kind: 'all'} : v));
+                    });
+                },
+            });
+        },
+        [projects, tasks, refreshAll, withErrorHandling]
+    );
 
-    function handleDeleteProject(id: number) {
-        const project = projects.find((p) => p.id === id);
-        const taskCount = tasks.filter((t) => t.projectId === id).length;
-        const impact = taskCount > 0 ? ` ${taskCount} task${taskCount === 1 ? '' : 's'} will be moved to Inbox.` : '';
-        setPendingConfirm({
-            title: 'Delete project',
-            message: `Delete "${project?.name ?? 'this project'}"?${impact} This can't be undone.`,
-            onConfirm: () => performDeleteProject(id),
-        });
-    }
-
-    async function handleCreateNote(): Promise<Note> {
+    const handleCreateNote = useCallback(async (): Promise<Note> => {
         const projectId = view.kind === 'project' ? view.projectId : undefined;
         const note = await api.createNote({title: 'Untitled note', content: '', projectId});
         setNotes(await api.listNotes());
         return note;
-    }
+    }, [view]);
 
-    function handleSaveNote(note: {id: number; title: string; content: string; projectId?: number}) {
-        withErrorHandling(async () => {
-            await api.updateNote(note);
-            await refreshAll();
-        });
-    }
+    const handleSaveNote = useCallback(
+        (note: {id: number; title: string; content: string; projectId?: number}) => {
+            withErrorHandling(async () => {
+                await api.updateNote(note);
+                // Notes-only refresh — avoid reloading tasks/projects on every blur autosave.
+                setNotes(await api.listNotes());
+            });
+        },
+        [withErrorHandling]
+    );
 
-    function performDeleteNote(id: number) {
-        withErrorHandling(async () => {
-            await api.deleteNote(id);
-            setNotes(await api.listNotes());
-        });
-    }
+    const handleDeleteNote = useCallback(
+        (id: number) => {
+            setPendingConfirm({
+                title: 'Delete note',
+                message: `Delete "${notes.find((n) => n.id === id)?.title || 'Untitled note'}"? This can't be undone.`,
+                onConfirm: () => {
+                    withErrorHandling(async () => {
+                        await api.deleteNote(id);
+                        setNotes(await api.listNotes());
+                    });
+                },
+            });
+        },
+        [notes, withErrorHandling]
+    );
 
-    function handleDeleteNote(id: number) {
-        const note = notes.find((n) => n.id === id);
-        setPendingConfirm({
-            title: 'Delete note',
-            message: `Delete "${note?.title || 'Untitled note'}"? This can't be undone.`,
-            onConfirm: () => performDeleteNote(id),
-        });
-    }
-
-    function handleExportTasks() {
+    const handleExportTasks = useCallback(() => {
         withErrorHandling(async () => {
             const path = await api.exportTasksCSV();
             if (path) setToast(`Exported ${tasks.length} task${tasks.length === 1 ? '' : 's'} to ${path}`);
         });
-    }
+    }, [tasks.length, withErrorHandling]);
 
     const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
 
@@ -215,7 +243,7 @@ function App() {
                 projects={projects}
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
-                onSelectTask={(t) => setSelectedTaskId(t.id)}
+                onSelectTask={handleSelectTask}
                 onDeleteTask={handleDeleteTask}
                 onMoveTaskDate={handleMoveTaskDate}
                 onMoveTaskProject={handleMoveTaskProject}
@@ -228,7 +256,7 @@ function App() {
                 projects={projects}
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
-                onSelectTask={(t) => setSelectedTaskId(t.id)}
+                onSelectTask={handleSelectTask}
                 onDeleteTask={handleDeleteTask}
             />
         );
@@ -239,7 +267,7 @@ function App() {
                 projects={projects}
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
-                onSelectTask={(t) => setSelectedTaskId(t.id)}
+                onSelectTask={handleSelectTask}
                 onDeleteTask={handleDeleteTask}
                 onExportTasks={handleExportTasks}
             />
@@ -265,7 +293,7 @@ function App() {
                 onAddTask={handleAddTask}
                 onUpdateProject={handleUpdateProject}
                 onToggleTask={handleToggleTask}
-                onSelectTask={(t) => setSelectedTaskId(t.id)}
+                onSelectTask={handleSelectTask}
                 onDeleteTask={handleDeleteTask}
             />
         ) : (

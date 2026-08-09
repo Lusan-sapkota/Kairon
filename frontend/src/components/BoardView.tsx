@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import {memo, useMemo, useRef, useState} from 'react';
 import type {CSSProperties} from 'react';
 import {ChevronLeft, ChevronRight, Check, X} from 'lucide-react';
 import type {Project, Task} from '../types';
@@ -63,34 +63,59 @@ export function BoardView({
     const [dayOffset, setDayOffset] = useState(0);
     const [addModalContext, setAddModalContext] = useState<{dueDate?: string; projectId?: number} | null>(null);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayKey = todayISO();
-    const weekStart = startOfWeek(today);
+    const todayKey = useMemo(() => todayISO(), []);
+    const weekStart = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return startOfWeek(today);
+    }, []);
 
-    const days = Array.from({length: WEEK_DAYS}, (_, i) => {
-        const d = new Date(weekStart);
-        d.setDate(weekStart.getDate() + dayOffset + i);
-        return d;
-    });
+    const days = useMemo(
+        () =>
+            Array.from({length: WEEK_DAYS}, (_, i) => {
+                const d = new Date(weekStart);
+                d.setDate(weekStart.getDate() + dayOffset + i);
+                return d;
+            }),
+        [weekStart, dayOffset]
+    );
 
-    const tasksByDate = new Map<string, Task[]>();
-    for (const t of tasks) {
-        if (!t.dueDate) continue;
-        if (!tasksByDate.has(t.dueDate)) tasksByDate.set(t.dueDate, []);
-        tasksByDate.get(t.dueDate)!.push(t);
-    }
-    for (const list of tasksByDate.values()) list.sort((a, b) => a.sortOrder - b.sortOrder);
+    const tasksByDate = useMemo(() => {
+        const map = new Map<string, Task[]>();
+        for (const t of tasks) {
+            if (!t.dueDate) continue;
+            if (!map.has(t.dueDate)) map.set(t.dueDate, []);
+            map.get(t.dueDate)!.push(t);
+        }
+        for (const list of map.values()) list.sort((a, b) => a.sortOrder - b.sortOrder);
+        return map;
+    }, [tasks]);
 
-    const projectById = new Map(projects.map((p) => [p.id, p]));
+    const tasksByProject = useMemo(() => {
+        const map = new Map<number, Task[]>();
+        for (const p of projects) map.set(p.id, []);
+        for (const t of tasks) {
+            if (t.projectId == null) continue;
+            if (!map.has(t.projectId)) map.set(t.projectId, []);
+            map.get(t.projectId)!.push(t);
+        }
+        for (const list of map.values()) list.sort((a, b) => a.sortOrder - b.sortOrder);
+        return map;
+    }, [tasks, projects]);
+
+    const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
     const isCurrentWeek = dayOffset === 0;
 
-    const todayTasks = tasksByDate.get(todayKey) ?? [];
-    const focusStats = {
-        todayOpen: todayTasks.filter((t) => !t.done).length,
-        overdue: tasks.filter(isOverdue).length,
-        activeProjects: projects.filter((p) => tasks.some((t) => t.projectId === p.id && !t.done)).length,
-    };
+    const focusStats = useMemo(() => {
+        const todayTasks = tasksByDate.get(todayKey) ?? [];
+        return {
+            todayOpen: todayTasks.filter((t) => !t.done).length,
+            overdue: tasks.filter(isOverdue).length,
+            activeProjects: projects.filter((p) => (tasksByProject.get(p.id) ?? []).some((t) => !t.done)).length,
+        };
+    }, [tasks, projects, tasksByDate, tasksByProject, todayKey]);
+
+    const greetingText = useMemo(() => greeting(), []);
 
     return (
         <div className="board">
@@ -101,7 +126,7 @@ export function BoardView({
                         <img className="greeting-image greeting-image-light" src={greetImage} alt="" />
                     </div>
                     <div className="board-hero-text">
-                        <h2 className="board-hero-title">{greeting()}, Chief</h2>
+                        <h2 className="board-hero-title">{greetingText}, Chief</h2>
                         <p className="board-hero-sub">
                             {focusStats.todayOpen === 0
                                 ? 'Clear day ahead — schedule something or clear backlog.'
@@ -181,9 +206,7 @@ export function BoardView({
                     </div>
                     <div className="board-row board-row-projects">
                         {projects.map((p) => {
-                            const projectTasks = tasks
-                                .filter((t) => t.projectId === p.id)
-                                .sort((a, b) => a.sortOrder - b.sortOrder);
+                            const projectTasks = tasksByProject.get(p.id) ?? [];
                             return (
                                 <BoardColumn
                                     key={p.id}
@@ -241,7 +264,7 @@ type ColumnProps = {
     onDropTask: (draggedId: number, beforeId: number | null) => void;
 };
 
-function BoardColumn({
+const BoardColumn = memo(function BoardColumn({
     title,
     subtitle,
     accentColor,
@@ -260,6 +283,7 @@ function BoardColumn({
     const [draft, setDraft] = useState('');
     const [dragOverId, setDragOverId] = useState<number | null>(null);
     const clickTimer = useRef<number | null>(null);
+    const openCount = useMemo(() => tasks.filter((t) => !t.done).length, [tasks]);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
@@ -311,7 +335,7 @@ function BoardColumn({
                     <span className="board-column-title">{title}</span>
                     {subtitle && <span className="board-column-subtitle">{subtitle}</span>}
                 </div>
-                <span className="board-column-count">{tasks.filter((t) => !t.done).length}</span>
+                <span className="board-column-count">{openCount}</span>
             </div>
 
             <div className="board-column-tasks">
@@ -333,7 +357,7 @@ function BoardColumn({
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setDragOverId(t.id);
+                                if (dragOverId !== t.id) setDragOverId(t.id);
                             }}
                             onDragLeave={() => setDragOverId((cur) => (cur === t.id ? null : cur))}
                             onDrop={(e) => {
@@ -408,4 +432,4 @@ function BoardColumn({
             </form>
         </div>
     );
-}
+});

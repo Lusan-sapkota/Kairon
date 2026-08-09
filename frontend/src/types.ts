@@ -26,10 +26,18 @@ export function priorityLabel(priority: number): string {
     return PRIORITIES.find((p) => p.value === priority)?.label ?? 'None';
 }
 
+let cachedTodayISO = '';
+let cachedTodayAt = 0;
+
 export function todayISO(): string {
+    const now = Date.now();
+    // Local calendar date rarely changes mid-session; refresh at most once a minute.
+    if (cachedTodayISO && now - cachedTodayAt < 60_000) return cachedTodayISO;
     const d = new Date();
     const offset = d.getTimezoneOffset();
-    return new Date(d.getTime() - offset * 60_000).toISOString().slice(0, 10);
+    cachedTodayISO = new Date(d.getTime() - offset * 60_000).toISOString().slice(0, 10);
+    cachedTodayAt = now;
+    return cachedTodayISO;
 }
 
 export function isOverdue(task: Task): boolean {

@@ -1,3 +1,4 @@
+import {memo} from 'react';
 import {Check, X, CalendarClock} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {formatShortDate, isOverdue, priorityColor, taskTooltip} from '../types';
@@ -10,7 +11,7 @@ type Props = {
     onDelete: (id: number) => void;
 };
 
-export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
+export const TaskRow = memo(function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
     return (
         <div className={`task-row ${task.done ? 'task-done' : ''}`}>
             <button
@@ -45,4 +46,4 @@ export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
             </button>
         </div>
     );
-}
+});

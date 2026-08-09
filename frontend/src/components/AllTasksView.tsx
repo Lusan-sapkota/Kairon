@@ -1,4 +1,4 @@
-import {useMemo, useState} from 'react';
+import {useDeferredValue, useMemo, useState} from 'react';
 import {Plus, CircleCheck, SearchX, Download} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {PRIORITIES, isDueToday, isOverdue} from '../types';
@@ -66,12 +66,13 @@ function compareTasks(a: Task, b: Task, sort: SortKey): number {
 
 export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelectTask, onDeleteTask, onExportTasks}: Props) {
     const [search, setSearch] = useState('');
+    const deferredSearch = useDeferredValue(search);
     const [filter, setFilter] = useState<FilterKey>('all');
     const [sort, setSort] = useState<SortKey>('priority');
     const [groupBy, setGroupBy] = useState<GroupKey>('project');
     const [addModalOpen, setAddModalOpen] = useState(false);
 
-    const projectById = new Map(projects.map((p) => [p.id, p]));
+    const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
 
     const stats = useMemo(() => {
         const total = tasks.length;
@@ -96,12 +97,12 @@ export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelect
     );
 
     const visible = useMemo(() => {
-        const term = search.trim().toLowerCase();
+        const term = deferredSearch.trim().toLowerCase();
         return tasks
             .filter((t) => matchesFilter(t, filter))
             .filter((t) => !term || t.title.toLowerCase().includes(term) || t.notes.toLowerCase().includes(term))
             .sort((a, b) => compareTasks(a, b, sort));
-    }, [tasks, filter, search, sort]);
+    }, [tasks, filter, deferredSearch, sort]);
 
     function renderRow(t: Task) {
         return (

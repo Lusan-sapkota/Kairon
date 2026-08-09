@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Plus} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
@@ -17,6 +17,14 @@ export function TaskComposer({projects, defaultProjectId, defaultDueDate, onAdd}
     const [projectId, setProjectId] = useState<number | undefined>(defaultProjectId);
     const [expanded, setExpanded] = useState(false);
 
+    useEffect(() => {
+        if (defaultDueDate !== undefined) setDueDate(defaultDueDate);
+    }, [defaultDueDate]);
+
+    useEffect(() => {
+        setProjectId(defaultProjectId);
+    }, [defaultProjectId]);
+
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!title.trim()) return;
@@ -25,6 +33,7 @@ export function TaskComposer({projects, defaultProjectId, defaultDueDate, onAdd}
         setPriority(0);
         setExpanded(false);
         if (!defaultDueDate) setDueDate('');
+        else setDueDate(defaultDueDate);
     }
 
     return (

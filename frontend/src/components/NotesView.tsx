@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState} from 'react';
+import {memo, useCallback, useDeferredValue, useEffect, useMemo, useState} from 'react';
 import {Plus, NotebookPen, Eye, Pencil, Search, Trash2} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -27,10 +27,42 @@ function wordCount(text: string): number {
     return trimmed.split(/\s+/).length;
 }
 
+type NoteRailItemProps = {
+    note: Note;
+    project?: Project;
+    active: boolean;
+    onSelect: (id: number) => void;
+};
+
+const NoteRailItem = memo(function NoteRailItem({note, project, active, onSelect}: NoteRailItemProps) {
+    const preview = note.content.trim() ? note.content.replace(/\s+/g, ' ').slice(0, 80) : 'Empty note';
+    return (
+        <button
+            type="button"
+            className={`note-list-item ${active ? 'active' : ''}`}
+            onClick={() => onSelect(note.id)}
+        >
+            <span className="note-list-title">{note.title || 'Untitled note'}</span>
+            <span className="note-list-preview">{preview}</span>
+            <span className="note-list-meta">
+                <span>{formatDate(note.updatedAt || note.createdAt)}</span>
+                {project && (
+                    <span className="note-list-project" style={{color: project.color}}>
+                        <span className="dot" style={{background: project.color}} />
+                        {project.name}
+                    </span>
+                )}
+                {note.taskId && <span className="note-list-badge">From task</span>}
+            </span>
+        </button>
+    );
+});
+
 export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) {
     const [selectedId, setSelectedId] = useState<number | null>(notes[0]?.id ?? null);
     const selected = notes.find((n) => n.id === selectedId) ?? null;
     const [search, setSearch] = useState('');
+    const deferredSearch = useDeferredValue(search);
 
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
@@ -40,14 +72,14 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
     const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
 
     const visible = useMemo(() => {
-        const term = search.trim().toLowerCase();
+        const term = deferredSearch.trim().toLowerCase();
         if (!term) return notes;
         return notes.filter(
             (n) =>
                 n.title.toLowerCase().includes(term) ||
                 n.content.toLowerCase().includes(term)
         );
-    }, [notes, search]);
+    }, [notes, deferredSearch]);
 
     useEffect(() => {
         setTitle(selected?.title ?? '');
@@ -61,6 +93,10 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
             setSelectedId(null);
         }
     }, [notes, selectedId]);
+
+    const selectNote = useCallback((id: number) => {
+        setSelectedId(id);
+    }, []);
 
     async function handleCreate() {
         const note = await onCreate();
@@ -107,32 +143,15 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
                 </div>
 
                 <div className="notes-list">
-                    {visible.map((n) => {
-                        const project = n.projectId ? projectById.get(n.projectId) : undefined;
-                        return (
-                            <button
-                                key={n.id}
-                                type="button"
-                                className={`note-list-item ${n.id === selectedId ? 'active' : ''}`}
-                                onClick={() => setSelectedId(n.id)}
-                            >
-                                <span className="note-list-title">{n.title || 'Untitled note'}</span>
-                                <span className="note-list-preview">
-                                    {n.content.trim() ? n.content.replace(/\s+/g, ' ').slice(0, 80) : 'Empty note'}
-                                </span>
-                                <span className="note-list-meta">
-                                    <span>{formatDate(n.updatedAt || n.createdAt)}</span>
-                                    {project && (
-                                        <span className="note-list-project" style={{color: project.color}}>
-                                            <span className="dot" style={{background: project.color}} />
-                                            {project.name}
-                                        </span>
-                                    )}
-                                    {n.taskId && <span className="note-list-badge">From task</span>}
-                                </span>
-                            </button>
-                        );
-                    })}
+                    {visible.map((n) => (
+                        <NoteRailItem
+                            key={n.id}
+                            note={n}
+                            project={n.projectId ? projectById.get(n.projectId) : undefined}
+                            active={n.id === selectedId}
+                            onSelect={selectNote}
+                        />
+                    ))}
                     {visible.length === 0 && (
                         <p className="empty-hint notes-list-empty">
                             {notes.length === 0 ? 'No notes yet' : 'No notes match your search'}

@@ -1,6 +1,6 @@
 # Kairon User Guide
 
-How to move around Kairon — every click, double-click, drag, and shortcut that the UI cares about.
+How to move around Kairon — clicks, double-clicks, drags, hovers, tooltips, keyboard, and view-by-view behavior.
 
 ---
 
@@ -8,14 +8,71 @@ How to move around Kairon — every click, double-click, drag, and shortcut that
 
 | Gesture | Typical meaning |
 | --- | --- |
-| **Single click** | Select, navigate, open, toggle |
-| **Double click** | Toggle done (board tasks) · open full add modal (empty column space) |
-| **Drag & drop** | Move a task to another day or project (board only) |
+| **Single click** | Select, navigate, open detail, toggle |
+| **Double click** | Toggle done (board tasks) · open full **New task** modal (empty column space) |
+| **Drag & drop** | Move a task to another day or project (**Board** only) |
+| **Hover** | Show tooltips · reveal ghost edit/delete buttons |
 | **Enter** | Submit composers / modals |
-| **Click outside overlay** | Close modal or detail panel |
-| **Hover** | Reveal ghost actions (edit / delete) |
+| **Focus** (composer input) | Expand date / priority / project options |
+| **Blur** | Autosave notes / task detail fields |
+| **Click outside overlay** | Close modal or task detail |
 
 Deletes always ask for confirmation first.
+
+---
+
+## Hover & tooltips
+
+Kairon uses native browser tooltips (`title`) plus hover-revealed actions.
+
+### Task detail tooltip
+
+Hover the **task title / main row body** (lists and board) to see a tooltip built from:
+
+1. Task title  
+2. Due date (weekday + short date), with **(overdue)** when past due and not done  
+3. Priority label when priority is Low / Medium / High  
+4. Project name when the task belongs to a project  
+
+Examples:
+
+- `Review board redesign` alone (no due date, priority, or project)  
+- `Ship onboarding polish` then `Due Fri, Aug 8 (overdue) · High priority · Kairon`
+
+Shown on:
+
+- **Board** — hover a task card  
+- **Calendar agenda**, **Project**, **All Tasks** — hover the task title area (`TaskRow`)
+
+### Other hover tooltips
+
+| Where | Tooltip |
+| --- | --- |
+| Sidebar nav icons (esp. when collapsed) | Board, Calendar, Notes, All Tasks |
+| Sidebar project row | Full project name |
+| Sidebar pencil / X | Edit project / Delete project |
+| Sidebar chevrons | Expand sidebar / Collapse sidebar |
+| Theme control | `Theme: System\|Light\|Dark (click to change)` |
+| Board ← / → | Previous day / Next day |
+| Board empty column space | Double-click to add a task |
+| Board / list delete (X) | Delete task |
+| Calendar ← / → | Previous month / Next month |
+| Calendar FAB (+) | Add a task for any date |
+| Project **Edit** / **New task** | Edit project / Add task |
+| Notes **New** / trash / Preview·Edit | New note / Delete note / mode tip |
+| All Tasks **Export CSV** | Export all tasks as CSV |
+| Color picker (project modal) | Pick a custom color |
+| Checkbox | Accessible “Toggle done” label |
+
+### Hover-revealed actions (“ghost” buttons)
+
+These stay hidden until you hover the parent row:
+
+| Location | Revealed controls |
+| --- | --- |
+| Sidebar project | Pencil (edit) · X (delete) |
+| Task row (lists) | X (delete) |
+| Board task | X (delete) |
 
 ---
 
@@ -25,66 +82,84 @@ Deletes always ask for confirmation first.
 | --- | --- |
 | Click **Board / Calendar / Notes / All Tasks** | Switch main view |
 | Click a **project** | Open that project’s page |
-| Click a **tag chip** | Filter the project list; click again to clear |
+| Click a **tag chip** | Filter projects to that tag; click again to clear |
 | Click **+** next to Projects | New project modal |
-| Hover a project → **pencil** | Edit name, color, tags |
-| Hover a project → **X** | Delete project (confirm; its tasks move to Inbox) |
-| Click **collapse / expand** chevrons | Narrow or widen the sidebar |
-| Click **Theme** | Cycle System → Light → Dark → System |
+| Hover project → **pencil** | Edit name, color, tags |
+| Hover project → **X** | Delete project (confirm). Tasks in that project move to **Inbox** (no project) |
+| Click **collapse / expand** | Narrow icon rail or full sidebar (remembered) |
+| Click **Theme** | Cycle **System → Light → Dark → System** (remembered) |
 
-Collapsed sidebar still shows icon navigation; project names hide until you expand again.
+When collapsed: labels hide; icon `title` tooltips still name each destination. Project list names hide until expanded.
+
+Open-task count badge on **Board** shows how many tasks are not done.
 
 ---
 
 ## Board
 
-Week schedule (Mon–Sun) on top, project columns underneath.
+Greeting (“Good morning/afternoon/evening/night, Chief”) depends on local time. Focus stats show **Today** (open), **Overdue**, and active **Projects**. Schedule is a fixed **Monday–Sunday** week that fills the width; project boards sit underneath.
 
 ### Schedule navigation
 
 | Action | Result |
 | --- | --- |
 | **← / →** | Shift the 7-day window by **one day** |
-| **This week** | Jump back to the current Monday–Sunday week (appears when you’ve moved away) |
+| **This week** | Jump back to the current Mon–Sun week (only when you’ve moved away) |
+
+Today’s column is highlighted. Each column header shows an **open-task count**.
 
 ### Tasks in a column
 
 | Action | Result |
 | --- | --- |
-| **Single click** task row | Open task detail (delayed slightly so double-click can win) |
-| **Double click** task row | Toggle done / not done |
-| Click the **checkbox** | Toggle done immediately |
-| Click **X** (on hover) | Delete task (confirm) |
-| Type in **+ Add task** and press **Enter** | Create a task in that day/project with default priority |
-| **Double click** empty space in a column | Open the full **New task** modal (pre-filled with that day or project) |
+| **Hover** task | Tooltip with title · due · priority · project (see above) |
+| **Single click** task | Open task detail (~200ms delay so double-click can win) |
+| **Double click** task | Toggle done / not done (strikethrough when done) |
+| Click **checkbox** | Toggle done immediately |
+| Hover → **X** | Delete task (confirm) |
+| Type in **+ Add task** + **Enter** | Quick-add with default (none) priority for that day/project |
+| **Double click** empty column space | Full **New task** modal (day or project pre-filled) |
+
+**Day columns** show a project color **dot**. **Project columns** show due date + priority text.
 
 ### Drag and drop
 
 | Action | Result |
 | --- | --- |
-| Drag a task onto another **day** column | Reschedule to that date (order preserved via fractional sort) |
+| Drag onto another **day** column | Reschedule to that date |
 | Drag onto a **project** column | Move into that project |
 | Drop **on a task** | Insert above that task |
-| Drop on **empty column area** | Append to the end of that column |
+| Drop on **empty column area** | Append to the end |
 
-Today’s column is highlighted. Project columns show due date + priority labels; day columns show a project color dot.
+Order uses fractional indexing so neighbors don’t all reshuffle.
 
 ---
 
 ## Calendar
 
+Full-bleed month grid + day agenda.
+
 | Action | Result |
 | --- | --- |
 | **← / →** | Previous / next month |
-| **Today** | Jump to the current month and select today |
-| Click a **day cell** | Select that day; agenda updates on the right |
-| Type in agenda composer + **Enter** | Add a task due on the selected date |
-| Click task title / row body | Open task detail |
+| **Today** | Jump to current month and select today |
+| Click a **day cell** | Select that day; agenda updates |
+| Agenda composer + **Enter** | Add a task due on the selected date (focus expands options) |
+| Hover task row | Detail tooltip |
+| Click task body | Open detail |
 | Click checkbox | Toggle done |
-| Click **X** | Delete (confirm) |
-| Floating **+** (bottom-right) | Quick-add modal for any date / project / priority |
+| Hover → **X** | Delete (confirm) |
+| Floating **+** (bottom-right) | Quick-add modal (any date / project / priority / notes) |
 
-Day cells show up to three active task titles as pills (project color on the left edge). Overdue days tint the date number.
+### Month cell visuals
+
+- Up to **three** active task titles as pills (project color on the left edge)  
+- **+N more** when there are additional open tasks  
+- **N done** when the day only has completed tasks  
+- Overdue days tint the date number  
+- Selected day uses an accent outline  
+
+Toolbar subtitle summarizes the month: active · done · overdue.
 
 ---
 
@@ -92,15 +167,15 @@ Day cells show up to three active task titles as pills (project color on the lef
 
 | Action | Result |
 | --- | --- |
-| **Edit** | Edit project name, color, tags |
-| **New task** | Full new-task modal (project pre-selected) |
-| Composer + **Enter** | Quick add into this project |
-| Filter chips (**All / Active / Overdue / Due Today / Completed**) | Narrow the list |
-| Click task row body | Open detail |
-| Click checkbox | Toggle done |
-| Click **X** | Delete (confirm) |
+| **Edit** | Edit name, color, tags |
+| **New task** | Full new-task modal (this project selected) |
+| Composer + **Enter** | Quick add into this project; focus expands options |
+| Filter chips | All · Active · Overdue · Due Today · Completed |
+| Hover task | Detail tooltip |
+| Click task body | Open detail |
+| Checkbox / **X** | Toggle done / delete (confirm) |
 
-Side panel shows completion % and priority breakdown for the current project only.
+Hero shows project mark, tags, and inline counts. Side panel: completion % and priority breakdown for **this project only**.
 
 ---
 
@@ -108,13 +183,15 @@ Side panel shows completion % and priority breakdown for the current project onl
 
 | Action | Result |
 | --- | --- |
-| **Search** | Filter by title or notes text |
-| **Sort** | Priority, due date, title, or newest |
-| **Group** | By project, priority, status, or none |
-| Filter chips | All, Active, Overdue, Due Today, No Date, High Priority, Completed |
-| **Export CSV** | Writes a CSV via the backend; path shown in a toast (click toast to dismiss) |
+| **Search** | Filter by title or notes (search updates are deferred for smoothness) |
+| **Sort** | Priority · Due date · Title · Newest |
+| **Group** | Project · Priority · Status · None |
+| Filter chips | All · Active · Overdue · Due Today · No Date · High Priority · Completed |
+| **Export CSV** | Backend writes a file; path appears in a toast |
 | **New task** | Full new-task modal |
-| Click row / checkbox / **X** | Same as elsewhere — detail, toggle, delete |
+| Hover / click / checkbox / **X** | Tooltip · detail · toggle · delete |
+
+Side panel: overall completion and priority breakdown across **all** tasks.
 
 ---
 
@@ -124,31 +201,31 @@ Side panel shows completion % and priority breakdown for the current project onl
 | --- | --- |
 | **New** | Create a note and focus the editor |
 | Click a note in the rail | Select it |
-| **Search** | Filter notes by title or content |
-| Change **project** select | Attach / detach project (saves immediately) |
-| **Preview / Edit** | Toggle Markdown preview vs source |
+| **Search** | Filter by title or content (deferred) |
+| Change **project** select | Attach / detach; saves immediately |
+| **Preview / Edit** | Markdown preview vs source |
 | **Save** | Explicit save |
 | Blur title or body | Autosave on blur |
 | **Trash** | Delete note (confirm) |
 
-Footer shows word count. Notes linked from a task show a **From task** badge. Markdown supports GFM (tables, lists, code, images via `![alt](url)`).
+Footer shows **word count**. Notes created from a task show a **From task** badge. Markdown (GFM): headings, lists, tables, code, blockquotes, images via `![alt](url)`.
 
 ---
 
 ## Task detail
 
-Opened from a single click on a task (lists) or a single click on the board (after the double-click delay).
+Opened from a single click on a list row, or a single click on the board (after the double-click delay).
 
 | Action | Result |
 | --- | --- |
-| Edit title / due date / priority / project | Fields update in the form |
+| Edit title / due date / priority / project | Form fields |
 | Blur title or notes | Autosave |
 | **Preview / Edit** on notes | Markdown preview toggle |
-| **Save** | Persist and keep the panel open |
-| **Delete task** | Confirm, then remove (linked auto-notes removed too) |
-| Click **X** or the dimmed overlay | Close without an extra prompt (unsaved field edits may already have blurred-saved) |
+| **Save** | Persist; panel stays open |
+| **Delete task** | Confirm, then remove (linked auto-notes removed) |
+| **X** or dimmed overlay | Close (blur may already have saved) |
 
-Task notes stay linked: content you write here is mirrored into a linked note when appropriate.
+Task notes stay linked: content written here is mirrored into a linked note when appropriate.
 
 ---
 
@@ -156,35 +233,52 @@ Task notes stay linked: content you write here is mirrored into a linked note wh
 
 ### New / edit project
 
-- Name (required), color (swatches, native picker, or hex), tags (comma-separated)
-- Overlay click or **Cancel** closes without saving
-- **Add project** / **Save changes** submits
+- **Name** (required)  
+- **Color** — swatches, native color picker, or hex  
+- **Tags** — comma-separated (e.g. `work, urgent`)  
+- Overlay / **Cancel** — discard  
+- **Add project** / **Save changes** — submit  
 
 ### New task
 
-- Title (required), due date, priority, project, notes
-- Used from Board (double-click empty column), Project **New task**, All Tasks, etc.
-- Overlay click or **Cancel** dismisses
+- Title (required), due date, priority, project, notes  
+- Opened from Board (double-click empty space), Project / All Tasks **New task**, etc.  
+- Overlay / **Cancel** dismisses  
+
+### Calendar floating quick-add
+
+Same fields as new task; FAB title: “Add a task for any date”. Opening resets the form and seeds the currently selected calendar date.
 
 ### Confirm dialogs
 
-Shown before deleting a **task**, **project**, or **note**.
+Before deleting a **task**, **project**, or **note**:
 
-- **Cancel** / overlay → abort
+- **Cancel** / overlay → abort  
 - **Delete** → proceed  
-  Deleting a project moves its tasks to Inbox (no project).
 
 ---
 
 ## Composers & keyboard
 
-| Where | Keys |
+| Where | Behavior |
 | --- | --- |
-| Task composer (`Add a task and press Enter…`) | **Enter** submits; focus expands date / priority / project options |
-| Board column `+ Add task` | **Enter** submits quick add |
-| Modal forms | **Enter** submits (when focus is in a single-line field) |
+| `Add a task and press Enter…` | **Enter** submits. **Focus** expands date / priority / project row |
+| Board `+ Add task` | **Enter** submits quick add |
+| Modal single-line fields | **Enter** submits the form |
 
-There is no global command palette yet — navigation is sidebar + in-view controls.
+No global command palette — navigation is sidebar + in-view controls.
+
+---
+
+## Visual language (at a glance)
+
+| Cue | Meaning |
+| --- | --- |
+| Green checkbox / strikethrough | Done |
+| Red / danger chips & overdue tint | Past due and still open |
+| Priority color (text or dot) | None / Low / Medium / High |
+| Project color dot or chip | Which project owns the task |
+| Accent outline / glow | Selected day or today column |
 
 ---
 
@@ -192,22 +286,25 @@ There is no global command palette yet — navigation is sidebar + in-view contr
 
 | Element | Behavior |
 | --- | --- |
-| **Error banner** | Shown on failed API calls; click to dismiss |
-| **Toast** | Success feedback (e.g. CSV export path); auto-hides ~4s or click to dismiss |
+| **Error banner** | Failed API call; click to dismiss |
+| **Toast** | Success (e.g. CSV path); auto-hides ~4s or click to dismiss |
 
 ---
 
 ## Themes & greeting
 
-- Theme preference is stored in `localStorage` (`kairon.theme`)
-- Sidebar collapse is stored in `localStorage` (`kairon.sidebarCollapsed`)
-- Board greeting mark uses **inverted** art in dark mode and **normal** art in light mode
+| Preference | Storage |
+| --- | --- |
+| Theme (system / light / dark) | `localStorage` → `kairon.theme` |
+| Sidebar collapsed | `localStorage` → `kairon.sidebarCollapsed` |
+
+Board greeting art: **inverted** mark in dark mode, **normal** mark in light mode.
 
 ---
 
 ## Data location
 
-Everything lives in local SQLite:
+Everything lives in local SQLite — no sync, no cloud, no accounts:
 
 | OS | Path |
 | --- | --- |
@@ -215,14 +312,14 @@ Everything lives in local SQLite:
 | macOS | `~/Library/Application Support/planner/planner.db` |
 | Windows | `%AppData%\planner\planner.db` |
 
-No sync, no cloud, no accounts.
-
 ---
 
 ## Tips
 
-1. On the **board**, prefer **double-click** to check things off so you don’t accidentally open detail.
-2. **Drag** is the fastest way to reschedule a whole pile of tasks across the week.
-3. Use **project tags** in the sidebar when you have many boards.
-4. **Notes Preview** is great for screenshot polish; Edit when you’re drafting.
-5. **Export CSV** from All Tasks if you need a backup outside SQLite.
+1. On the **board**, **double-click** to complete tasks so you don’t open detail by accident; use the checkbox for an instant toggle.  
+2. **Hover** a task anytime you want due / priority / project without opening it.  
+3. **Drag** across the week to reschedule in bulk.  
+4. **Tag chips** in the sidebar tame a long project list.  
+5. Composer **focus** (not only Enter) unlocks date and priority without opening a modal.  
+6. **Export CSV** from All Tasks for a backup outside SQLite.  
+7. Notes **Preview** for reading; **Edit** while drafting — blur autosaves.

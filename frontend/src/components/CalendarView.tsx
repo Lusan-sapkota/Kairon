@@ -1,7 +1,7 @@
-import {useMemo, useState} from 'react';
+import {memo, useCallback, useMemo, useState} from 'react';
 import {ChevronLeft, ChevronRight, CalendarDays, CircleCheck} from 'lucide-react';
 import type {Project, Task} from '../types';
-import {isOverdue, todayISO} from '../types';
+import {todayISO} from '../types';
 import {TaskRow} from './TaskRow';
 import {TaskComposer} from './TaskComposer';
 import {FloatingQuickAdd} from './FloatingQuickAdd';
@@ -15,14 +15,76 @@ type Props = {
     onDeleteTask: (id: number) => void;
 };
 
+type DayModel = {
+    key: string;
+    day: number;
+    iso: string;
+    pills: {id: number; title: string; color: string}[];
+    activeCount: number;
+    doneCount: number;
+    hasOverdue: boolean;
+};
+
 function toISO(y: number, m: number, d: number): string {
     return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
+function isOverdueVs(task: Task, today: string): boolean {
+    return !!task.dueDate && !task.done && task.dueDate < today;
+}
+
+type DayCellProps = {
+    model: DayModel;
+    isToday: boolean;
+    isSelected: boolean;
+    onSelect: (iso: string) => void;
+};
+
+const CalendarDayCell = memo(function CalendarDayCell({model, isToday, isSelected, onSelect}: DayCellProps) {
+    return (
+        <button
+            type="button"
+            className={[
+                'calendar-cell',
+                isToday ? 'calendar-cell-today' : '',
+                isSelected ? 'calendar-cell-selected' : '',
+                model.activeCount + model.doneCount > 0 ? 'calendar-cell-has-tasks' : '',
+            ]
+                .filter(Boolean)
+                .join(' ')}
+            onClick={() => onSelect(model.iso)}
+        >
+            <span className={`calendar-cell-day ${model.hasOverdue ? 'calendar-cell-day-overdue' : ''}`}>
+                {model.day}
+            </span>
+            <div className="calendar-cell-tasks">
+                {model.pills.map((p) => (
+                    <span key={p.id} className="calendar-pill" style={{borderLeftColor: p.color}}>
+                        {p.title}
+                    </span>
+                ))}
+                {model.activeCount > 3 && (
+                    <span className="calendar-pill-more">+{model.activeCount - 3} more</span>
+                )}
+                {model.activeCount === 0 && model.doneCount > 0 && (
+                    <span className="calendar-pill-more">{model.doneCount} done</span>
+                )}
+            </div>
+        </button>
+    );
+});
+
 export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelectTask, onDeleteTask}: Props) {
-    const today = new Date();
-    const [cursor, setCursor] = useState({year: today.getFullYear(), month: today.getMonth()});
-    const [selectedDate, setSelectedDate] = useState(todayISO());
+    const todayKey = useMemo(() => todayISO(), []);
+    const now = useMemo(() => {
+        const d = new Date();
+        return {year: d.getFullYear(), month: d.getMonth()};
+    }, []);
+
+    const [cursor, setCursor] = useState(now);
+    const [selectedDate, setSelectedDate] = useState(todayKey);
+
+    const projectById = useMemo(() => new Map(projects.map((p) => [p.id, p])), [projects]);
 
     const tasksByDate = useMemo(() => {
         const map = new Map<string, Task[]>();
@@ -37,39 +99,79 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
         return map;
     }, [tasks]);
 
-    const monthLabel = new Date(cursor.year, cursor.month, 1).toLocaleDateString(undefined, {
-        month: 'long',
-        year: 'numeric',
-    });
+    const monthLabel = useMemo(
+        () =>
+            new Date(cursor.year, cursor.month, 1).toLocaleDateString(undefined, {
+                month: 'long',
+                year: 'numeric',
+            }),
+        [cursor.year, cursor.month]
+    );
 
-    const firstDay = new Date(cursor.year, cursor.month, 1).getDay();
-    const daysInMonth = new Date(cursor.year, cursor.month + 1, 0).getDate();
-    const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({length: daysInMonth}, (_, i) => i + 1)];
+    const {firstDay, daysInMonth} = useMemo(() => {
+        const first = new Date(cursor.year, cursor.month, 1).getDay();
+        const days = new Date(cursor.year, cursor.month + 1, 0).getDate();
+        return {firstDay: first, daysInMonth: days};
+    }, [cursor.year, cursor.month]);
 
-    const projectById = new Map(projects.map((p) => [p.id, p]));
-    const selectedTasks = tasksByDate.get(selectedDate) ?? [];
-    const isSelectedToday = selectedDate === todayISO();
-    const isCurrentMonth = cursor.year === today.getFullYear() && cursor.month === today.getMonth();
+    const dayModels = useMemo(() => {
+        const models: (DayModel | null)[] = Array(firstDay).fill(null);
+        for (let day = 1; day <= daysInMonth; day++) {
+            const iso = toISO(cursor.year, cursor.month, day);
+            const dayTasks = tasksByDate.get(iso) ?? [];
+            const activeTasks = dayTasks.filter((t) => !t.done);
+            models.push({
+                key: iso,
+                day,
+                iso,
+                activeCount: activeTasks.length,
+                doneCount: dayTasks.length - activeTasks.length,
+                hasOverdue: dayTasks.some((t) => isOverdueVs(t, todayKey)),
+                pills: activeTasks.slice(0, 3).map((t) => ({
+                    id: t.id,
+                    title: t.title,
+                    color: t.projectId
+                        ? projectById.get(t.projectId)?.color ?? 'var(--text-faint)'
+                        : 'var(--text-faint)',
+                })),
+            });
+        }
+        return models;
+    }, [cursor.year, cursor.month, firstDay, daysInMonth, tasksByDate, projectById, todayKey]);
 
     const monthStats = useMemo(() => {
         let total = 0;
         let done = 0;
         let overdue = 0;
-        for (let d = 1; d <= daysInMonth; d++) {
-            const iso = toISO(cursor.year, cursor.month, d);
-            const dayTasks = tasksByDate.get(iso) ?? [];
-            total += dayTasks.length;
-            done += dayTasks.filter((t) => t.done).length;
-            overdue += dayTasks.filter(isOverdue).length;
+        for (const model of dayModels) {
+            if (!model) continue;
+            total += model.activeCount + model.doneCount;
+            done += model.doneCount;
+            if (model.hasOverdue) {
+                const dayTasks = tasksByDate.get(model.iso) ?? [];
+                overdue += dayTasks.filter((t) => isOverdueVs(t, todayKey)).length;
+            }
         }
         return {total, done, overdue, active: total - done};
-    }, [cursor, daysInMonth, tasksByDate]);
+    }, [dayModels, tasksByDate, todayKey]);
 
-    const selectedLabel = new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-    });
+    const selectedTasks = tasksByDate.get(selectedDate) ?? [];
+    const isSelectedToday = selectedDate === todayKey;
+    const isCurrentMonth = cursor.year === now.year && cursor.month === now.month;
+
+    const selectedLabel = useMemo(
+        () =>
+            new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+            }),
+        [selectedDate]
+    );
+
+    const selectDate = useCallback((iso: string) => {
+        setSelectedDate(iso);
+    }, []);
 
     function shiftMonth(delta: number) {
         const d = new Date(cursor.year, cursor.month + delta, 1);
@@ -77,10 +179,11 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
     }
 
     function goToday() {
-        const now = new Date();
-        setCursor({year: now.getFullYear(), month: now.getMonth()});
-        setSelectedDate(todayISO());
+        setCursor(now);
+        setSelectedDate(todayKey);
     }
+
+    const openCount = useMemo(() => selectedTasks.filter((t) => !t.done).length, [selectedTasks]);
 
     return (
         <div className="calendar-view">
@@ -124,51 +227,19 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
                         ))}
                     </div>
                     <div className="calendar-grid">
-                        {cells.map((day, i) => {
-                            if (day === null) return <div key={i} className="calendar-cell calendar-cell-empty" />;
-                            const iso = toISO(cursor.year, cursor.month, day);
-                            const dayTasks = tasksByDate.get(iso) ?? [];
-                            const activeTasks = dayTasks.filter((t) => !t.done);
-                            const isToday = iso === todayISO();
-                            const isSelected = iso === selectedDate;
-                            const hasOverdue = dayTasks.some(isOverdue);
-                            return (
-                                <button
-                                    key={i}
-                                    className={[
-                                        'calendar-cell',
-                                        isToday ? 'calendar-cell-today' : '',
-                                        isSelected ? 'calendar-cell-selected' : '',
-                                        dayTasks.length > 0 ? 'calendar-cell-has-tasks' : '',
-                                    ]
-                                        .filter(Boolean)
-                                        .join(' ')}
-                                    onClick={() => setSelectedDate(iso)}
-                                >
-                                    <span className={`calendar-cell-day ${hasOverdue ? 'calendar-cell-day-overdue' : ''}`}>
-                                        {day}
-                                    </span>
-                                    <div className="calendar-cell-tasks">
-                                        {activeTasks.slice(0, 3).map((t) => {
-                                            const color = t.projectId
-                                                ? projectById.get(t.projectId)?.color ?? 'var(--text-faint)'
-                                                : 'var(--text-faint)';
-                                            return (
-                                                <span key={t.id} className="calendar-pill" style={{borderLeftColor: color}}>
-                                                    {t.title}
-                                                </span>
-                                            );
-                                        })}
-                                        {activeTasks.length > 3 && (
-                                            <span className="calendar-pill-more">+{activeTasks.length - 3} more</span>
-                                        )}
-                                        {activeTasks.length === 0 && dayTasks.length > 0 && (
-                                            <span className="calendar-pill-more">{dayTasks.length} done</span>
-                                        )}
-                                    </div>
-                                </button>
-                            );
-                        })}
+                        {dayModels.map((model, i) =>
+                            model ? (
+                                <CalendarDayCell
+                                    key={model.key}
+                                    model={model}
+                                    isToday={model.iso === todayKey}
+                                    isSelected={model.iso === selectedDate}
+                                    onSelect={selectDate}
+                                />
+                            ) : (
+                                <div key={`empty-${i}`} className="calendar-cell calendar-cell-empty" />
+                            )
+                        )}
                     </div>
                 </div>
 
@@ -178,23 +249,17 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
                             <p className="calendar-agenda-eyebrow">{isSelectedToday ? 'Today' : 'Agenda'}</p>
                             <h3 className="calendar-agenda-title">{selectedLabel}</h3>
                         </div>
-                        <span className="calendar-agenda-count">
-                            {selectedTasks.filter((t) => !t.done).length} open
-                        </span>
+                        <span className="calendar-agenda-count">{openCount} open</span>
                     </div>
 
-                    <TaskComposer
-                        projects={projects}
-                        defaultDueDate={selectedDate}
-                        onAdd={onAddTask}
-                    />
+                    <TaskComposer projects={projects} defaultDueDate={selectedDate} onAdd={onAddTask} />
 
                     {selectedTasks.length === 0 ? (
                         <div className="calendar-agenda-empty">
                             <span className="calendar-agenda-empty-icon">
                                 <CircleCheck size={20} />
                             </span>
-                            <p className="empty-hint">Nothing scheduled  add a task for this day.</p>
+                            <p className="empty-hint">Nothing scheduled — add a task for this day.</p>
                         </div>
                     ) : (
                         <div className="task-list calendar-agenda-list">
