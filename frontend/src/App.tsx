@@ -48,24 +48,24 @@ function App() {
     }, [toast]);
 
     useEffect(() => {
-        // Wails' Linux backend doesn't rescale the window when it's dragged onto a
-        // monitor with a different DPI, so it can get stuck rendering at its old size.
-        // Watch for the screen actually changing and ask the backend to re-fit the window.
-        let lastScreen = `${window.screen.width}x${window.screen.height}x${window.devicePixelRatio}`;
-        function checkScreen() {
-            const current = `${window.screen.width}x${window.screen.height}x${window.devicePixelRatio}`;
-            if (current !== lastScreen) {
-                lastScreen = current;
-                api.refitWindow().catch(() => {});
-            }
-        }
-        window.addEventListener('focus', checkScreen);
-        document.addEventListener('visibilitychange', checkScreen);
-        window.addEventListener('resize', checkScreen);
+        let fittedFor = `${window.screen.width}x${window.screen.height}`;
+        let lastSeen = fittedFor;
+        let debounceTimer = 0;
+        const interval = window.setInterval(() => {
+            const current = `${window.screen.width}x${window.screen.height}`;
+            if (current === lastSeen) return;
+            lastSeen = current;
+            window.clearTimeout(debounceTimer);
+            debounceTimer = window.setTimeout(() => {
+                const settled = `${window.screen.width}x${window.screen.height}`;
+                if (settled === fittedFor) return;
+                fittedFor = settled;
+                api.refitWindow(window.screen.width, window.screen.height).catch(() => {});
+            }, 700);
+        }, 250);
         return () => {
-            window.removeEventListener('focus', checkScreen);
-            document.removeEventListener('visibilitychange', checkScreen);
-            window.removeEventListener('resize', checkScreen);
+            window.clearInterval(interval);
+            window.clearTimeout(debounceTimer);
         };
     }, []);
 
@@ -169,8 +169,6 @@ function App() {
     function handleSaveNote(note: {id: number; title: string; content: string; projectId?: number}) {
         withErrorHandling(async () => {
             await api.updateNote(note);
-            // A note linked to a task mirrors its edits back onto that task, so refresh
-            // everything to keep the Task Detail panel (and any other view) in sync.
             await refreshAll();
         });
     }

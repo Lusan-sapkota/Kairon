@@ -63,5 +63,5 @@ export const api = {
 
     exportTasksCSV: (): Promise<string> => Go.ExportTasksCSV(),
 
-    refitWindow: (): Promise<void> => Go.RefitWindow(),
+    refitWindow: (width: number, height: number): Promise<void> => Go.RefitWindow(width, height),
 };

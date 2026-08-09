@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -15,6 +16,10 @@ import (
 type App struct {
 	ctx context.Context
 	db  *sql.DB
+
+	refitGen atomic.Uint64
+	pendingW atomic.Int64
+	pendingH atomic.Int64
 }
 
 // NewApp creates a new App application struct
@@ -22,8 +27,6 @@ func NewApp() *App {
 	return &App{}
 }
 
-// startup is called when the app starts. The context is saved
-// so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	runtime.WindowMaximise(ctx)
@@ -46,23 +49,75 @@ func now() string {
 	return time.Now().Format(time.RFC3339)
 }
 
-// RefitWindow re-asserts the window's size (or maximized state) so GTK recomputes its
-// geometry for whichever monitor it's currently on. Wails' Linux backend only re-reads a
-// monitor's DPI scale factor inside the fullscreen code path, so a window dragged between
-// differently-scaled monitors can get stuck rendering at its old size. The frontend calls
-// this when it detects the screen has actually changed (see App.tsx).
-func (a *App) RefitWindow() {
+func (a *App) RefitWindow(width, height int) {
+	if runtime.WindowIsFullscreen(a.ctx) || width <= 0 || height <= 0 {
+		return
+	}
+
+	a.pendingW.Store(int64(width))
+	a.pendingH.Store(int64(height))
+	gen := a.refitGen.Add(1)
+
+	go func(gen uint64) {
+		time.Sleep(450 * time.Millisecond)
+		if gen != a.refitGen.Load() {
+			return
+		}
+		a.applyRefit(int(a.pendingW.Load()), int(a.pendingH.Load()))
+	}(gen)
+}
+
+func (a *App) applyRefit(hintW, hintH int) {
 	if runtime.WindowIsFullscreen(a.ctx) {
 		return
 	}
-	if runtime.WindowIsMaximised(a.ctx) {
-		runtime.WindowUnmaximise(a.ctx)
-		runtime.WindowMaximise(a.ctx)
+
+	curW, curH := hintW, hintH
+	bigW, bigH := hintW, hintH
+
+	if screens, err := runtime.ScreenGetAll(a.ctx); err == nil {
+		for _, s := range screens {
+			w, h := s.Size.Width, s.Size.Height
+			if w <= 0 || h <= 0 {
+				w, h = s.Width, s.Height
+			}
+			if w > bigW {
+				bigW = w
+			}
+			if h > bigH {
+				bigH = h
+			}
+			if s.IsCurrent && w > 0 && h > 0 {
+				curW, curH = w, h
+			}
+		}
+	}
+
+	if hintW*hintH > curW*curH {
+		curW, curH = hintW, hintH
+	}
+	if curW <= 0 || curH <= 0 {
 		return
 	}
-	w, h := runtime.WindowGetSize(a.ctx)
-	runtime.WindowSetSize(a.ctx, w+1, h)
-	runtime.WindowSetSize(a.ctx, w, h)
+
+	runtime.WindowSetMaxSize(a.ctx, bigW, bigH)
+
+	gw, gh := runtime.WindowGetSize(a.ctx)
+
+	if gw >= curW-80 && gh >= curH-80 {
+		if !runtime.WindowIsMaximised(a.ctx) {
+			runtime.WindowMaximise(a.ctx)
+		}
+		return
+	}
+
+	if runtime.WindowIsMaximised(a.ctx) {
+		runtime.WindowUnmaximise(a.ctx)
+		time.Sleep(150 * time.Millisecond)
+	}
+
+	runtime.WindowSetSize(a.ctx, curW, curH)
+	runtime.WindowMaximise(a.ctx)
 }
 
 // ---------- Projects ----------
@@ -232,8 +287,6 @@ func (a *App) SetTaskDueDate(id int64, dueDate *string, sortOrder float64) (*Tas
 	return a.getTask(id)
 }
 
-// SetTaskProject moves a task to a new project and board position, leaving its due date untouched.
-// Used when a card is dragged between project columns (or reordered within one) on the board.
 func (a *App) SetTaskProject(id int64, projectId *int64, sortOrder float64) (*Task, error) {
 	_, err := a.db.Exec(
 		`UPDATE tasks SET project_id = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
@@ -267,8 +320,6 @@ func (a *App) getTask(id int64) (*Task, error) {
 	return &t, nil
 }
 
-// ExportTasksCSV prompts the user for a save location via a native dialog and writes every
-// task to a CSV file there. Returns an empty path if the user cancels the dialog.
 func (a *App) ExportTasksCSV() (string, error) {
 	rows, err := a.db.Query(`
 		SELECT t.title, t.notes, t.done, t.priority, t.due_date, p.name, t.created_at, t.updated_at

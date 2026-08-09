@@ -42,8 +42,8 @@ export function ListTasks() {
   return window['go']['main']['App']['ListTasks']();
 }
 
-export function RefitWindow() {
-  return window['go']['main']['App']['RefitWindow']();
+export function RefitWindow(arg1, arg2) {
+  return window['go']['main']['App']['RefitWindow'](arg1, arg2);
 }
 
 export function SetTaskDueDate(arg1, arg2, arg3) {
