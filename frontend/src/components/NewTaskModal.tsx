@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {createPortal} from 'react-dom';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
 
@@ -23,7 +24,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
         onCreate({title: title.trim(), notes, dueDate: dueDate || undefined, priority, projectId});
     }
 
-    return (
+    return createPortal(
         <div className="modal-overlay" onClick={onClose}>
             <form className="modal-panel" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
                 <div className="modal-header">
@@ -99,6 +100,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                     </button>
                 </div>
             </form>
-        </div>
+        </div>,
+        document.body
     );
 }
