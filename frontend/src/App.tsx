@@ -47,6 +47,28 @@ function App() {
         return () => window.clearTimeout(timer);
     }, [toast]);
 
+    useEffect(() => {
+        // Wails' Linux backend doesn't rescale the window when it's dragged onto a
+        // monitor with a different DPI, so it can get stuck rendering at its old size.
+        // Watch for the screen actually changing and ask the backend to re-fit the window.
+        let lastScreen = `${window.screen.width}x${window.screen.height}x${window.devicePixelRatio}`;
+        function checkScreen() {
+            const current = `${window.screen.width}x${window.screen.height}x${window.devicePixelRatio}`;
+            if (current !== lastScreen) {
+                lastScreen = current;
+                api.refitWindow().catch(() => {});
+            }
+        }
+        window.addEventListener('focus', checkScreen);
+        document.addEventListener('visibilitychange', checkScreen);
+        window.addEventListener('resize', checkScreen);
+        return () => {
+            window.removeEventListener('focus', checkScreen);
+            document.removeEventListener('visibilitychange', checkScreen);
+            window.removeEventListener('resize', checkScreen);
+        };
+    }, []);
+
     async function withErrorHandling(fn: () => Promise<void>) {
         try {
             await fn();
@@ -147,14 +169,25 @@ function App() {
     function handleSaveNote(note: {id: number; title: string; content: string; projectId?: number}) {
         withErrorHandling(async () => {
             await api.updateNote(note);
+            // A note linked to a task mirrors its edits back onto that task, so refresh
+            // everything to keep the Task Detail panel (and any other view) in sync.
+            await refreshAll();
+        });
+    }
+
+    function performDeleteNote(id: number) {
+        withErrorHandling(async () => {
+            await api.deleteNote(id);
             setNotes(await api.listNotes());
         });
     }
 
     function handleDeleteNote(id: number) {
-        withErrorHandling(async () => {
-            await api.deleteNote(id);
-            setNotes(await api.listNotes());
+        const note = notes.find((n) => n.id === id);
+        setPendingConfirm({
+            title: 'Delete note',
+            message: `Delete "${note?.title || 'Untitled note'}"? This can't be undone.`,
+            onConfirm: () => performDeleteNote(id),
         });
     }
 

@@ -62,4 +62,6 @@ export const api = {
     deleteNote: (id: number): Promise<void> => Go.DeleteNote(id),
 
     exportTasksCSV: (): Promise<string> => Go.ExportTasksCSV(),
+
+    refitWindow: (): Promise<void> => Go.RefitWindow(),
 };

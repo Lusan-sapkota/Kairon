@@ -22,6 +22,8 @@ export function ListProjects():Promise<Array<main.Project>>;
 
 export function ListTasks():Promise<Array<main.Task>>;
 
+export function RefitWindow():Promise<void>;
+
 export function SetTaskDueDate(arg1:number,arg2:any,arg3:number):Promise<main.Task>;
 
 export function SetTaskProject(arg1:number,arg2:any,arg3:number):Promise<main.Task>;

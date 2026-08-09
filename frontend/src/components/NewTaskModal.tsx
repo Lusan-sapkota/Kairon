@@ -27,7 +27,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>
-            <form className="modal-panel" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+            <form className="modal-panel modal-panel-xl" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
                 <div className="modal-header">
                     <span>New task</span>
                     <button type="button" className="icon-btn" onClick={onClose}>
@@ -87,7 +87,6 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                 <textarea
                     className="input textarea"
                     placeholder="Notes…"
-                    rows={4}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                 />

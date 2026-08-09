@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {createPortal} from 'react-dom';
 import {Plus, X, CalendarClock, Flag, FolderKanban} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
@@ -42,71 +43,89 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
 
     return (
         <>
-            {open && (
-                <form className="fab-panel" onSubmit={submit}>
-                    <div className="fab-panel-header">
-                        <span>New task, any date</span>
-                        <button type="button" className="icon-btn" onClick={() => setOpen(false)}>
-                            <X size={15} />
-                        </button>
-                    </div>
-                    <input
-                        autoFocus
-                        className="input"
-                        placeholder="Task title"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                    />
-                    <div className="fab-panel-row">
-                        <label><CalendarClock />Due date</label>
-                        <input
-                            type="date"
-                            className="input input-sm"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                        />
-                    </div>
-                    <div className="fab-panel-row">
-                        <label><Flag />Priority</label>
-                        <select
-                            className="input input-sm"
-                            value={priority}
-                            onChange={(e) => setPriority(Number(e.target.value))}
+            {open &&
+                createPortal(
+                    <div className="modal-overlay" onClick={() => setOpen(false)}>
+                        <form
+                            className="modal-panel modal-panel-xl"
+                            onClick={(e) => e.stopPropagation()}
+                            onSubmit={submit}
                         >
-                            {PRIORITIES.map((p) => (
-                                <option key={p.value} value={p.value}>
-                                    {p.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="fab-panel-row">
-                        <label><FolderKanban />Category</label>
-                        <select
-                            className="input input-sm"
-                            value={projectId ?? ''}
-                            onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : undefined)}
-                        >
-                            <option value="">No project</option>
-                            {projects.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <textarea
-                        className="input textarea"
-                        placeholder="Notes (optional)…"
-                        rows={3}
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                    />
-                    <button type="submit" className="btn">
-                        <Plus size={15} />Add task
-                    </button>
-                </form>
-            )}
+                            <div className="modal-header">
+                                <span>New task, any date</span>
+                                <button type="button" className="icon-btn" onClick={() => setOpen(false)}>
+                                    <X size={16} />
+                                </button>
+                            </div>
+
+                            <input
+                                autoFocus
+                                className="input"
+                                placeholder="Task title"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                            />
+
+                            <div className="detail-field-row">
+                                <label><CalendarClock />Due date</label>
+                                <input
+                                    type="date"
+                                    className="input input-sm"
+                                    value={dueDate}
+                                    onChange={(e) => setDueDate(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="detail-field-row">
+                                <label><Flag />Priority</label>
+                                <select
+                                    className="input input-sm"
+                                    value={priority}
+                                    onChange={(e) => setPriority(Number(e.target.value))}
+                                >
+                                    {PRIORITIES.map((p) => (
+                                        <option key={p.value} value={p.value}>
+                                            {p.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="detail-field-row">
+                                <label><FolderKanban />Category</label>
+                                <select
+                                    className="input input-sm"
+                                    value={projectId ?? ''}
+                                    onChange={(e) => setProjectId(e.target.value ? Number(e.target.value) : undefined)}
+                                >
+                                    <option value="">No project</option>
+                                    {projects.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <textarea
+                                className="input textarea"
+                                placeholder="Notes (optional)…"
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                            />
+
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn">
+                                    <Plus size={15} />Add task
+                                </button>
+                            </div>
+                        </form>
+                    </div>,
+                    document.body
+                )}
             <button className={`fab ${open ? 'fab-open' : ''}`} onClick={toggleOpen} title="Add a task for any date">
                 <Plus />
             </button>

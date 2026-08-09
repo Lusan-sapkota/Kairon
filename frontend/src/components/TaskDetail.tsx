@@ -1,7 +1,10 @@
 import {useEffect, useState} from 'react';
-import {X, CalendarClock, Flag, FolderKanban, StickyNote} from 'lucide-react';
+import {X, CalendarClock, Flag, FolderKanban, StickyNote, Eye, Pencil} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type {Project, Task} from '../types';
 import {PRIORITIES} from '../types';
+import {normalizeMarkdown, markdownComponents} from '../markdown';
 
 type Props = {
     task: Task;
@@ -17,6 +20,7 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
     const [dueDate, setDueDate] = useState(task.dueDate ?? '');
     const [priority, setPriority] = useState(task.priority);
     const [projectId, setProjectId] = useState<number | undefined>(task.projectId);
+    const [previewing, setPreviewing] = useState(!!task.notes);
 
     useEffect(() => {
         setTitle(task.title);
@@ -24,6 +28,9 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
         setDueDate(task.dueDate ?? '');
         setPriority(task.priority);
         setProjectId(task.projectId);
+        // Default to preview for tasks that already have notes; empty notes have
+        // nothing to preview, so drop straight into editing them.
+        setPreviewing(!!task.notes);
     }, [task]);
 
     function save(overrides: Partial<{title: string; notes: string; dueDate: string; priority: number; projectId?: number}> = {}) {
@@ -90,7 +97,7 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                         </select>
                     </div>
 
-                    <div className="detail-meta-cell detail-meta-cell-wide">
+                    <div className="detail-meta-cell">
                         <span className="detail-meta-label"><FolderKanban size={13} />Project</span>
                         <select
                             className="input input-sm"
@@ -110,14 +117,29 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                 </div>
 
                 <div className="detail-notes-section">
-                    <span className="detail-meta-label"><StickyNote size={13} />Notes</span>
-                    <textarea
-                        className="input textarea detail-notes-textarea"
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        onBlur={() => save()}
-                        placeholder="Add details…"
-                    />
+                    <div className="detail-notes-header">
+                        <span className="detail-meta-label"><StickyNote size={13} />Notes</span>
+                        <button
+                            className="icon-btn"
+                            onClick={() => setPreviewing((p) => !p)}
+                            title={previewing ? 'Edit' : 'Preview markdown'}
+                        >
+                            {previewing ? <Pencil size={14} /> : <Eye size={14} />}
+                        </button>
+                    </div>
+                    {previewing ? (
+                        <div className="detail-notes-textarea note-preview">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{normalizeMarkdown(notes)}</ReactMarkdown>
+                        </div>
+                    ) : (
+                        <textarea
+                            className="input textarea detail-notes-textarea"
+                            value={notes}
+                            onChange={(e) => setNotes(e.target.value)}
+                            onBlur={() => save()}
+                            placeholder="Add details… (Markdown supported)"
+                        />
+                    )}
                 </div>
 
                 <div className="detail-footer">

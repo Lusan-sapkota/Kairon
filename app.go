@@ -46,6 +46,25 @@ func now() string {
 	return time.Now().Format(time.RFC3339)
 }
 
+// RefitWindow re-asserts the window's size (or maximized state) so GTK recomputes its
+// geometry for whichever monitor it's currently on. Wails' Linux backend only re-reads a
+// monitor's DPI scale factor inside the fullscreen code path, so a window dragged between
+// differently-scaled monitors can get stuck rendering at its old size. The frontend calls
+// this when it detects the screen has actually changed (see App.tsx).
+func (a *App) RefitWindow() {
+	if runtime.WindowIsFullscreen(a.ctx) {
+		return
+	}
+	if runtime.WindowIsMaximised(a.ctx) {
+		runtime.WindowUnmaximise(a.ctx)
+		runtime.WindowMaximise(a.ctx)
+		return
+	}
+	w, h := runtime.WindowGetSize(a.ctx)
+	runtime.WindowSetSize(a.ctx, w+1, h)
+	runtime.WindowSetSize(a.ctx, w, h)
+}
+
 // ---------- Projects ----------
 
 func (a *App) ListProjects() ([]Project, error) {
@@ -386,6 +405,18 @@ func (a *App) UpdateNote(input NoteInput) (*Note, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Notes created from a task's notes field stay linked via TaskID; mirror edits back onto
+	// the task so the two stay in sync regardless of which side was edited.
+	if n.TaskID != nil {
+		if _, err := a.db.Exec(
+			`UPDATE tasks SET title = ?, notes = ?, project_id = ?, updated_at = ? WHERE id = ?`,
+			n.Title, n.Content, n.ProjectID, ts, *n.TaskID,
+		); err != nil {
+			return nil, err
+		}
+	}
+
 	return &n, nil
 }
 

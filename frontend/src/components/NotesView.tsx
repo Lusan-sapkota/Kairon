@@ -3,6 +3,7 @@ import {Plus, NotebookPen, Eye, Pencil} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type {Note, Project} from '../types';
+import {normalizeMarkdown, markdownComponents} from '../markdown';
 
 type Props = {
     notes: Note[];
@@ -14,23 +15,6 @@ type Props = {
 
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
-}
-
-// Converts pasted `<Image src="…" alt="…" caption="…" />` component tags into
-// standard Markdown image syntax so they render like any other markdown image.
-function normalizeMarkdown(md: string): string {
-    return md.replace(/<Image\b([^>]*)\/?>/gi, (_match, rawAttrs: string) => {
-        const attrs: Record<string, string> = {};
-        const attrPattern = /(\w+)\s*=\s*"([^"]*)"|(\w+)\s*=\s*'([^']*)'/g;
-        let m: RegExpExecArray | null;
-        while ((m = attrPattern.exec(rawAttrs))) {
-            const key = (m[1] ?? m[3]).toLowerCase();
-            attrs[key] = m[2] ?? m[4] ?? '';
-        }
-        if (!attrs.src) return _match;
-        const image = `![${attrs.alt ?? ''}](${attrs.src})`;
-        return attrs.caption ? `${image}\n*${attrs.caption}*` : image;
-    });
 }
 
 export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) {
@@ -46,8 +30,18 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
         setTitle(selected?.title ?? '');
         setContent(selected?.content ?? '');
         setProjectId(selected?.projectId);
-        setPreviewing(false);
+        // Default to preview for notes that already have content; an empty note has
+        // nothing to preview, so drop straight into editing it.
+        setPreviewing(!!selected?.content);
     }, [selectedId]);
+
+    useEffect(() => {
+        // Deletion is confirmed asynchronously (see onDelete), so clear the selection only
+        // once the note has actually disappeared from the list rather than on click.
+        if (selectedId !== null && !notes.some((n) => n.id === selectedId)) {
+            setSelectedId(null);
+        }
+    }, [notes, selectedId]);
 
     async function handleCreate() {
         const note = await onCreate();
@@ -120,14 +114,12 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
                             >
                                 {previewing ? <Pencil size={14} /> : <Eye size={14} />}
                             </button>
-                            <button className="btn btn-danger" onClick={() => {
-                                onDelete(selected.id);
-                                setSelectedId(null);
-                            }}>Delete</button>
+                            <button className="btn" onClick={() => save()}>Save</button>
+                            <button className="btn btn-danger" onClick={() => onDelete(selected.id)}>Delete</button>
                         </div>
                         {previewing ? (
                             <div className="note-content note-preview">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{normalizeMarkdown(content)}</ReactMarkdown>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{normalizeMarkdown(content)}</ReactMarkdown>
                             </div>
                         ) : (
                             <textarea
