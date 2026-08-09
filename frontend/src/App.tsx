@@ -3,6 +3,7 @@ import './App.css';
 import {api} from './api';
 import {Sidebar} from './components/Sidebar';
 import {TaskListView} from './components/TaskListView';
+import {AllTasksView} from './components/AllTasksView';
 import {BoardView} from './components/BoardView';
 import {CalendarView} from './components/CalendarView';
 import {NotesView} from './components/NotesView';
@@ -153,13 +154,9 @@ function App() {
         );
     } else if (view.kind === 'all') {
         content = (
-            <TaskListView
-                title="All Tasks"
+            <AllTasksView
                 tasks={tasks}
                 projects={projects}
-                groupByProject
-                cardLayout
-                emptyHint="No tasks yet. Add your first one above."
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
                 onSelectTask={(t) => setSelectedTaskId(t.id)}
