@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to build (e.g. v1.0.0). Leave empty to use the ref.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.platform }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux/amd64
+            artifact: kairon-linux-amd64
+            binary: kairon
+          - os: windows-latest
+            platform: windows/amd64
+            artifact: kairon-windows-amd64
+            binary: kairon.exe
+          - os: macos-latest
+            platform: darwin/universal
+            artifact: kairon-darwin-universal
+            binary: kairon
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
+
+      - name: Install Linux WebKit deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          wails build -clean -platform '${{ matrix.platform }}'
+          mkdir -p dist
+          if [[ '${{ runner.os }}' == 'Windows' ]]; then
+            cp "build/bin/${{ matrix.binary }}" "dist/${{ matrix.artifact }}.exe"
+          elif [[ '${{ matrix.platform }}' == darwin/* ]]; then
+            # Packaged .app when present; otherwise the binary
+            if compgen -G 'build/bin/*.app' > /dev/null; then
+              ditto -c -k --sequesterRsrc --keepParent build/bin/*.app "dist/${{ matrix.artifact }}.zip"
+            else
+              cp "build/bin/${{ matrix.binary }}" "dist/${{ matrix.artifact }}"
+              chmod +x "dist/${{ matrix.artifact }}"
+            fi
+          else
+            cp "build/bin/${{ matrix.binary }}" "dist/${{ matrix.artifact }}"
+            chmod +x "dist/${{ matrix.artifact }}"
+          fi
+          ls -lah dist
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Flatten assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p upload
+          find release-assets -type f -exec cp -v {} upload/ \;
+          ls -lah upload
+
+      - name: Create / update release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          name: Kairon ${{ inputs.tag || github.ref_name }}
+          draft: false
+          generate_release_notes: true
+          files: upload/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

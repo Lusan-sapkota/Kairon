@@ -25,7 +25,7 @@
 
 Get the packaged app from GitHub Releases — no need to build from source.
 
-1. Open **[Releases](https://github.com/Lusan-sapkota/Kairon/releases)** (or jump to **[v1.0.0](https://github.com/Lusan-sapkota/Kairon/releases/tag/v1.0.0)**).
+1. Open **[Releases](https://github.com/Lusan-sapkota/Kairon/releases)**.
 2. Under **Assets**, download the application bundle for your OS.
 3. Unpack or install if needed, then run **Kairon**.
 
