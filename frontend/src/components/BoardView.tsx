@@ -1,4 +1,4 @@
-import {useLayoutEffect, useRef, useState} from 'react';
+import {useRef, useState} from 'react';
 import type {CSSProperties} from 'react';
 import {ChevronLeft, ChevronRight, Check, X} from 'lucide-react';
 import type {Project, Task} from '../types';
@@ -18,26 +18,21 @@ type Props = {
     onMoveTaskProject: (id: number, projectId: number | undefined, sortOrder: number) => void;
 };
 
+const WEEK_DAYS = 7;
+
 function toISO(d: Date): string {
     const offset = d.getTimezoneOffset();
     return new Date(d.getTime() - offset * 60_000).toISOString().slice(0, 10);
 }
 
-function useColumnCount(minColumnWidth: number, fallback: number) {
-    const ref = useRef<HTMLDivElement>(null);
-    const [count, setCount] = useState(fallback);
-
-    useLayoutEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const update = () => setCount(Math.max(3, Math.floor(el.clientWidth / minColumnWidth)));
-        update();
-        const ro = new ResizeObserver(update);
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, [minColumnWidth]);
-
-    return [ref, count] as const;
+/** Monday-start week containing `d`. */
+function startOfWeek(d: Date): Date {
+    const start = new Date(d);
+    start.setHours(0, 0, 0, 0);
+    const day = start.getDay(); // 0 Sun … 6 Sat
+    const mondayOffset = day === 0 ? -6 : 1 - day;
+    start.setDate(start.getDate() + mondayOffset);
+    return start;
 }
 
 // Fractional indexing: dropping before `beforeId` slots the card between its new neighbors
@@ -66,16 +61,16 @@ export function BoardView({
     onMoveTaskProject,
 }: Props) {
     const [dayOffset, setDayOffset] = useState(0);
-    const [containerRef, dayCount] = useColumnCount(220, 5);
     const [addModalContext, setAddModalContext] = useState<{dueDate?: string; projectId?: number} | null>(null);
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayKey = todayISO();
+    const weekStart = startOfWeek(today);
 
-    const days = Array.from({length: dayCount}, (_, i) => {
-        const d = new Date(today);
-        d.setDate(d.getDate() + dayOffset + i);
+    const days = Array.from({length: WEEK_DAYS}, (_, i) => {
+        const d = new Date(weekStart);
+        d.setDate(weekStart.getDate() + dayOffset + i);
         return d;
     });
 
@@ -88,7 +83,7 @@ export function BoardView({
     for (const list of tasksByDate.values()) list.sort((a, b) => a.sortOrder - b.sortOrder);
 
     const projectById = new Map(projects.map((p) => [p.id, p]));
-    const isCurrentWindow = dayOffset === 0;
+    const isCurrentWeek = dayOffset === 0;
 
     const todayTasks = tasksByDate.get(todayKey) ?? [];
     const focusStats = {
@@ -109,7 +104,7 @@ export function BoardView({
                         <h2 className="board-hero-title">{greeting()}, Chief</h2>
                         <p className="board-hero-sub">
                             {focusStats.todayOpen === 0
-                                ? 'Clear day ahead  schedule something or clear backlog.'
+                                ? 'Clear day ahead — schedule something or clear backlog.'
                                 : `${focusStats.todayOpen} open today`}
                             {focusStats.overdue > 0 ? ` · ${focusStats.overdue} overdue` : ''}
                         </p>
@@ -137,20 +132,20 @@ export function BoardView({
                 <div className="board-section-header">
                     <h3 className="board-subheading">Schedule</h3>
                     <div className="board-nav-group">
-                        <button className="icon-btn" onClick={() => setDayOffset((o) => o - dayCount)} title="Previous days">
+                        <button className="icon-btn" onClick={() => setDayOffset((o) => o - 1)} title="Previous day">
                             <ChevronLeft size={16} />
                         </button>
-                        {!isCurrentWindow && (
+                        {!isCurrentWeek && (
                             <button className="btn-sm btn" onClick={() => setDayOffset(0)}>
-                                Today
+                                This week
                             </button>
                         )}
-                        <button className="icon-btn" onClick={() => setDayOffset((o) => o + dayCount)} title="Next days">
+                        <button className="icon-btn" onClick={() => setDayOffset((o) => o + 1)} title="Next day">
                             <ChevronRight size={16} />
                         </button>
                     </div>
                 </div>
-                <div className="board-row board-row-days" ref={containerRef}>
+                <div className="board-row board-row-days">
                     {days.map((d) => {
                         const iso = toISO(d);
                         const dayTasks = tasksByDate.get(iso) ?? [];

@@ -138,6 +138,13 @@ function App() {
         });
     }
 
+    function handleUpdateProject(id: number, name: string, color: string, tags: string) {
+        withErrorHandling(async () => {
+            await api.updateProject(id, name, color, tags);
+            setProjects(await api.listProjects());
+        });
+    }
+
     function performDeleteProject(id: number) {
         withErrorHandling(async () => {
             await api.deleteProject(id);
@@ -256,6 +263,7 @@ function App() {
                 tasks={projectTasks}
                 projects={projects}
                 onAddTask={handleAddTask}
+                onUpdateProject={handleUpdateProject}
                 onToggleTask={handleToggleTask}
                 onSelectTask={(t) => setSelectedTaskId(t.id)}
                 onDeleteTask={handleDeleteTask}
@@ -273,6 +281,7 @@ function App() {
                 view={view}
                 onSelectView={setView}
                 onAddProject={handleAddProject}
+                onUpdateProject={handleUpdateProject}
                 onDeleteProject={handleDeleteProject}
             />
             <main className="main-content">

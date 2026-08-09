@@ -727,6 +727,13 @@ select.input option {
     flex-wrap: wrap;
 }
 
+.project-hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
 .project-hero-identity {
     display: flex;
     align-items: center;
@@ -1546,6 +1553,16 @@ select.input option {
     flex: 1;
     min-height: 0;
     gap: 12px;
+}
+
+.board-row-days {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.board-row-days .board-column {
+    flex: unset;
+    min-width: 0;
 }
 
 .board-row-projects {

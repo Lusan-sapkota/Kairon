@@ -7,7 +7,7 @@ Thanks for your interest in improving Kairon! This is a small, local-first plann
 - **Report a bug**  open an issue with steps to reproduce, what you expected, what happened instead, your OS, and the Kairon version (or commit hash) you're running.
 - **Suggest a feature**  open an issue describing the problem it solves, not just the feature itself. Small, focused additions are easier to review than large ones.
 - **Submit a fix or feature**  open a pull request (see below).
-- **Improve docs**  the README, this file, or inline code comments are all fair game.
+- **Improve docs** — the README, [GUIDE.md](GUIDE.md), this file, or inline code comments are all fair game.
 
 ## Prerequisites
 

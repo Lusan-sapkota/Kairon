@@ -1,20 +1,23 @@
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
-import {X, Plus, Palette} from 'lucide-react';
+import {X, Plus, Palette, Check} from 'lucide-react';
+import type {Project} from '../types';
 
 const PROJECT_COLORS = ['#ff8552', '#f5a623', '#f5484c', '#2ecc71', '#14b8a6', '#4d94ff', '#8b5cf6', '#ec4899'];
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 type Props = {
+    project?: Project;
     onClose: () => void;
-    onCreate: (input: {name: string; color: string; tags: string}) => void;
+    onSave: (input: {id?: number; name: string; color: string; tags: string}) => void;
 };
 
-export function NewProjectModal({onClose, onCreate}: Props) {
-    const [name, setName] = useState('');
-    const [color, setColor] = useState(PROJECT_COLORS[0]);
-    const [hexDraft, setHexDraft] = useState(PROJECT_COLORS[0]);
-    const [tags, setTags] = useState('');
+export function NewProjectModal({project, onClose, onSave}: Props) {
+    const isEdit = !!project;
+    const [name, setName] = useState(project?.name ?? '');
+    const [color, setColor] = useState(project?.color ?? PROJECT_COLORS[0]);
+    const [hexDraft, setHexDraft] = useState(project?.color ?? PROJECT_COLORS[0]);
+    const [tags, setTags] = useState(project?.tags ?? '');
 
     function pickColor(c: string) {
         setColor(c);
@@ -29,14 +32,19 @@ export function NewProjectModal({onClose, onCreate}: Props) {
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!name.trim()) return;
-        onCreate({name: name.trim(), color, tags: tags.trim()});
+        onSave({
+            id: project?.id,
+            name: name.trim(),
+            color,
+            tags: tags.trim(),
+        });
     }
 
     return createPortal(
         <div className="modal-overlay" onClick={onClose}>
             <form className="modal-panel modal-panel-lg" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
                 <div className="modal-header">
-                    <span>New project</span>
+                    <span>{isEdit ? 'Edit project' : 'New project'}</span>
                     <button type="button" className="icon-btn" onClick={onClose}>
                         <X size={16} />
                     </button>
@@ -97,7 +105,11 @@ export function NewProjectModal({onClose, onCreate}: Props) {
                         Cancel
                     </button>
                     <button type="submit" className="btn">
-                        <Plus size={15} />Add project
+                        {isEdit ? (
+                            <><Check size={15} />Save changes</>
+                        ) : (
+                            <><Plus size={15} />Add project</>
+                        )}
                     </button>
                 </div>
             </form>

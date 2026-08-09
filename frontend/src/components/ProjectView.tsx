@@ -1,16 +1,18 @@
 import {useMemo, useState} from 'react';
-import {Plus, CircleCheck, ListTodo} from 'lucide-react';
+import {Plus, CircleCheck, ListTodo, Pencil} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {PRIORITIES, isDueToday, isOverdue} from '../types';
 import {TaskComposer} from './TaskComposer';
 import {TaskRow} from './TaskRow';
 import {NewTaskModal} from './NewTaskModal';
+import {NewProjectModal} from './NewProjectModal';
 
 type Props = {
     project: Project;
     tasks: Task[];
     projects: Project[];
     onAddTask: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onUpdateProject: (id: number, name: string, color: string, tags: string) => void;
     onToggleTask: (id: number) => void;
     onSelectTask: (task: Task) => void;
     onDeleteTask: (id: number) => void;
@@ -46,12 +48,14 @@ export function ProjectView({
     tasks,
     projects,
     onAddTask,
+    onUpdateProject,
     onToggleTask,
     onSelectTask,
     onDeleteTask,
 }: Props) {
     const [filter, setFilter] = useState<FilterKey>('all');
     const [addModalOpen, setAddModalOpen] = useState(false);
+    const [editModalOpen, setEditModalOpen] = useState(false);
 
     const tags = useMemo(
         () =>
@@ -113,15 +117,25 @@ export function ProjectView({
                                 <h2 className="project-hero-title">{project.name}</h2>
                                 <p className="project-hero-sub">
                                     {stats.active === 0 && stats.total === 0
-                                        ? 'No tasks yet  add one below'
+                                        ? 'No tasks yet — add one below'
                                         : `${stats.active} active · ${stats.completed} done`}
                                 </p>
                             </div>
                         </div>
-                        <button className="btn btn-sm" onClick={() => setAddModalOpen(true)} title="Add task">
-                            <Plus size={15} />
-                            New task
-                        </button>
+                        <div className="project-hero-actions">
+                            <button
+                                className="btn btn-ghost btn-sm"
+                                onClick={() => setEditModalOpen(true)}
+                                title="Edit project"
+                            >
+                                <Pencil size={14} />
+                                Edit
+                            </button>
+                            <button className="btn btn-sm" onClick={() => setAddModalOpen(true)} title="Add task">
+                                <Plus size={15} />
+                                New task
+                            </button>
+                        </div>
                     </div>
 
                     {(tags.length > 0 || stats.total > 0) && (
@@ -271,6 +285,19 @@ export function ProjectView({
                     onCreate={(input) => {
                         onAddTask(input);
                         setAddModalOpen(false);
+                    }}
+                />
+            )}
+
+            {editModalOpen && (
+                <NewProjectModal
+                    project={project}
+                    onClose={() => setEditModalOpen(false)}
+                    onSave={(input) => {
+                        if (input.id != null) {
+                            onUpdateProject(input.id, input.name, input.color, input.tags);
+                        }
+                        setEditModalOpen(false);
                     }}
                 />
             )}

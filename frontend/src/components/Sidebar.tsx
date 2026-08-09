@@ -8,6 +8,7 @@ import {
     ChevronsRight,
     Plus,
     X,
+    Pencil,
     Sun,
     Moon,
     MonitorCog,
@@ -22,6 +23,7 @@ type Props = {
     view: View;
     onSelectView: (view: View) => void;
     onAddProject: (name: string, color: string, tags: string) => void;
+    onUpdateProject: (id: number, name: string, color: string, tags: string) => void;
     onDeleteProject: (id: number) => void;
 };
 
@@ -52,9 +54,10 @@ function projectTags(p: Project): string[] {
         .filter(Boolean);
 }
 
-export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDeleteProject}: Props) {
+export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onUpdateProject, onDeleteProject}: Props) {
     const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSED_KEY) === '1');
     const [addModalOpen, setAddModalOpen] = useState(false);
+    const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [activeTag, setActiveTag] = useState<string | null>(null);
     const [themePref, setThemePref] = useState<ThemePref>(
         () => (localStorage.getItem(THEME_KEY) as ThemePref | null) ?? 'system'
@@ -189,6 +192,16 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                                     <span className="project-name">{p.name}</span>
                                     <button
                                         className="icon-btn ghost"
+                                        title="Edit project"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingProject(p);
+                                        }}
+                                    >
+                                        <Pencil size={12} />
+                                    </button>
+                                    <button
+                                        className="icon-btn ghost"
                                         title="Delete project"
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -223,9 +236,22 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
             {addModalOpen && (
                 <NewProjectModal
                     onClose={() => setAddModalOpen(false)}
-                    onCreate={(input) => {
+                    onSave={(input) => {
                         onAddProject(input.name, input.color, input.tags);
                         setAddModalOpen(false);
+                    }}
+                />
+            )}
+
+            {editingProject && (
+                <NewProjectModal
+                    project={editingProject}
+                    onClose={() => setEditingProject(null)}
+                    onSave={(input) => {
+                        if (input.id != null) {
+                            onUpdateProject(input.id, input.name, input.color, input.tags);
+                        }
+                        setEditingProject(null);
                     }}
                 />
             )}
