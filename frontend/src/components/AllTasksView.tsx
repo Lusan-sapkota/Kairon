@@ -166,17 +166,23 @@ export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelect
 
     return (
         <div className="all-tasks-view">
-            <div className="task-view-header">
-                <h2 className="view-title">All Tasks</h2>
+            <header className="all-tasks-hero">
+                <div className="all-tasks-hero-text">
+                    <h2 className="all-tasks-hero-title">All Tasks</h2>
+                    <p className="all-tasks-hero-sub">
+                        {stats.active} active · {stats.completed} done
+                        {stats.overdue > 0 ? ` · ${stats.overdue} overdue` : ''}
+                    </p>
+                </div>
                 <div className="task-view-header-actions">
                     <button className="btn btn-ghost btn-sm" onClick={onExportTasks} title="Export all tasks as CSV">
                         <Download size={14} />Export CSV
                     </button>
-                    <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add task">
-                        <Plus size={16} />
+                    <button className="btn btn-sm" onClick={() => setAddModalOpen(true)} title="Add task">
+                        <Plus size={15} />New task
                     </button>
                 </div>
-            </div>
+            </header>
 
             <div className="all-tasks-layout">
                 <div className="all-tasks-main">

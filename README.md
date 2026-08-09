@@ -8,21 +8,21 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
 </p>
 
-A simple, self-contained planner app — tasks, projects, a calendar, and notes in one lightweight desktop app. Built with [Wails](https://wails.io) (Go) and React + TypeScript, with a local SQLite database for storage. No network access, no accounts — everything stays on your machine.
+A simple, self-contained planner app  tasks, projects, a calendar, and notes in one lightweight desktop app. Built with [Wails](https://wails.io) (Go) and React + TypeScript, with a local SQLite database for storage. No network access, no accounts  everything stays on your machine.
 
 ## Features
 
-- **Today board** — a kanban-style view of today's tasks with drag-and-drop to reschedule or reassign to a project
-- **Upcoming** — a month calendar view showing tasks by due date, with a per-day task list and drag-and-drop rescheduling
-- **All tasks** — a flat, filterable list of every task, with one-click CSV export
-- **Projects** — group tasks and notes under color-coded projects, with comma-separated tags for quick filtering in the sidebar
-- **Notes** — freeform notes, optionally attached to a project, with:
-  - Live Markdown rendering (headings, lists, tables, code blocks, blockquotes — via `react-markdown` + `remark-gfm`) toggled with an edit/preview button
+- **Today board**  a kanban-style view of today's tasks with drag-and-drop to reschedule or reassign to a project
+- **Upcoming**  a month calendar view showing tasks by due date, with a per-day task list and drag-and-drop rescheduling
+- **All tasks**  a flat, filterable list of every task, with one-click CSV export
+- **Projects**  group tasks and notes under color-coded projects, with comma-separated tags for quick filtering in the sidebar
+- **Notes**  freeform notes, optionally attached to a project, with:
+  - Live Markdown rendering (headings, lists, tables, code blocks, blockquotes  via `react-markdown` + `remark-gfm`) toggled with an edit/preview button
   - Inline image rendering, from standard `![alt](url)` Markdown syntax or pasted `<Image src="…" alt="…" caption="…" />` tags (auto-converted to Markdown with the caption shown underneath)
   - Notes are automatically created/kept in sync when you add notes to a task, and stay linked back to that task
-- **Quick add** — a floating quick-add button for capturing a task (with due date, priority, project) from anywhere without breaking your flow
-- **Priorities & due dates** — none/low/medium/high priority levels, optional due dates, overdue/due-today highlighting
-- **Themes** — light, dark, or system, remembered across launches
+- **Quick add**  a floating quick-add button for capturing a task (with due date, priority, project) from anywhere without breaking your flow
+- **Priorities & due dates**  none/low/medium/high priority levels, optional due dates, overdue/due-today highlighting
+- **Themes**  light, dark, or system, remembered across launches
 
 All data is stored locally in a SQLite file under your user config directory (see [Data storage](#data-storage)).
 

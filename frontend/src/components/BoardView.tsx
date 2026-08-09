@@ -4,6 +4,8 @@ import {ChevronLeft, ChevronRight, Check, X} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {formatShortDate, greeting, isOverdue, priorityColor, priorityLabel, taskTooltip, todayISO} from '../types';
 import {NewTaskModal} from './NewTaskModal';
+import greetImage from '../assets/images/greet.png';
+import greetImageInverted from '../assets/images/greet-inverted.png';
 
 type Props = {
     tasks: Task[];
@@ -69,6 +71,7 @@ export function BoardView({
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayKey = todayISO();
 
     const days = Array.from({length: dayCount}, (_, i) => {
         const d = new Date(today);
@@ -87,11 +90,52 @@ export function BoardView({
     const projectById = new Map(projects.map((p) => [p.id, p]));
     const isCurrentWindow = dayOffset === 0;
 
+    const todayTasks = tasksByDate.get(todayKey) ?? [];
+    const focusStats = {
+        todayOpen: todayTasks.filter((t) => !t.done).length,
+        overdue: tasks.filter(isOverdue).length,
+        activeProjects: projects.filter((p) => tasks.some((t) => t.projectId === p.id && !t.done)).length,
+    };
+
     return (
         <div className="board">
-            <div className="board-section">
+            <header className="board-hero">
+                <div className="board-hero-identity">
+                    <div className="greeting-image-wrap" aria-hidden>
+                        <img className="greeting-image greeting-image-dark" src={greetImageInverted} alt="" />
+                        <img className="greeting-image greeting-image-light" src={greetImage} alt="" />
+                    </div>
+                    <div className="board-hero-text">
+                        <h2 className="board-hero-title">{greeting()}, Chief</h2>
+                        <p className="board-hero-sub">
+                            {focusStats.todayOpen === 0
+                                ? 'Clear day ahead  schedule something or clear backlog.'
+                                : `${focusStats.todayOpen} open today`}
+                            {focusStats.overdue > 0 ? ` · ${focusStats.overdue} overdue` : ''}
+                        </p>
+                    </div>
+                </div>
+                <div className="board-hero-stats">
+                    <div className="board-stat">
+                        <span className="board-stat-value">{focusStats.todayOpen}</span>
+                        <span className="board-stat-label">Today</span>
+                    </div>
+                    <div className="board-stat">
+                        <span className={`board-stat-value ${focusStats.overdue > 0 ? 'board-stat-danger' : ''}`}>
+                            {focusStats.overdue}
+                        </span>
+                        <span className="board-stat-label">Overdue</span>
+                    </div>
+                    <div className="board-stat">
+                        <span className="board-stat-value">{focusStats.activeProjects}</span>
+                        <span className="board-stat-label">Projects</span>
+                    </div>
+                </div>
+            </header>
+
+            <div className="board-section board-section-days">
                 <div className="board-section-header">
-                    <h2 className="view-title">{greeting()}, Chief</h2>
+                    <h3 className="board-subheading">Schedule</h3>
                     <div className="board-nav-group">
                         <button className="icon-btn" onClick={() => setDayOffset((o) => o - dayCount)} title="Previous days">
                             <ChevronLeft size={16} />
@@ -115,7 +159,7 @@ export function BoardView({
                                 key={iso}
                                 title={d.toLocaleDateString(undefined, {weekday: 'long'})}
                                 subtitle={d.toLocaleDateString(undefined, {month: 'long', day: 'numeric'})}
-                                highlighted={iso === todayISO()}
+                                highlighted={iso === todayKey}
                                 tasks={dayTasks}
                                 projectById={projectById}
                                 showProjectDot
@@ -138,6 +182,7 @@ export function BoardView({
                 <div className="board-section board-section-projects">
                     <div className="board-section-header">
                         <h3 className="board-subheading">Projects</h3>
+                        <span className="board-section-hint">{projects.length} boards</span>
                     </div>
                     <div className="board-row board-row-projects">
                         {projects.map((p) => {
@@ -271,6 +316,7 @@ function BoardColumn({
                     <span className="board-column-title">{title}</span>
                     {subtitle && <span className="board-column-subtitle">{subtitle}</span>}
                 </div>
+                <span className="board-column-count">{tasks.filter((t) => !t.done).length}</span>
             </div>
 
             <div className="board-column-tasks">

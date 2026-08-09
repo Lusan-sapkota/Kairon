@@ -2,8 +2,8 @@ import {useEffect, useState} from 'react';
 import './App.css';
 import {api} from './api';
 import {Sidebar} from './components/Sidebar';
-import {TaskListView} from './components/TaskListView';
 import {AllTasksView} from './components/AllTasksView';
+import {ProjectView} from './components/ProjectView';
 import {BoardView} from './components/BoardView';
 import {CalendarView} from './components/CalendarView';
 import {NotesView} from './components/NotesView';
@@ -250,18 +250,18 @@ function App() {
     } else {
         const project = projects.find((p) => p.id === view.projectId);
         const projectTasks = tasks.filter((t) => t.projectId === view.projectId);
-        content = (
-            <TaskListView
-                title={project?.name ?? 'Project'}
+        content = project ? (
+            <ProjectView
+                project={project}
                 tasks={projectTasks}
                 projects={projects}
-                defaultProjectId={view.projectId}
-                emptyHint="No tasks in this project yet."
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
                 onSelectTask={(t) => setSelectedTaskId(t.id)}
                 onDeleteTask={handleDeleteTask}
             />
+        ) : (
+            <div className="loading-state">Project not found</div>
         );
     }
 
