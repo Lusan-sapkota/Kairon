@@ -59,63 +59,66 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                     <button className="icon-btn" onClick={onClose}><X size={16} /></button>
                 </div>
 
-                <div className="detail-field-row">
-                    <label><CalendarClock />Due date</label>
-                    <input
-                        type="date"
-                        className="input input-sm"
-                        value={dueDate}
-                        onChange={(e) => {
-                            setDueDate(e.target.value);
-                            save({dueDate: e.target.value});
-                        }}
+                <div className="detail-meta-grid">
+                    <div className="detail-meta-cell">
+                        <span className="detail-meta-label"><CalendarClock size={13} />Due date</span>
+                        <input
+                            type="date"
+                            className="input input-sm"
+                            value={dueDate}
+                            onChange={(e) => {
+                                setDueDate(e.target.value);
+                                save({dueDate: e.target.value});
+                            }}
+                        />
+                    </div>
+
+                    <div className="detail-meta-cell">
+                        <span className="detail-meta-label"><Flag size={13} />Priority</span>
+                        <select
+                            className="input input-sm"
+                            value={priority}
+                            onChange={(e) => {
+                                const value = Number(e.target.value);
+                                setPriority(value);
+                                save({priority: value});
+                            }}
+                        >
+                            {PRIORITIES.map((p) => (
+                                <option key={p.value} value={p.value}>{p.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="detail-meta-cell detail-meta-cell-wide">
+                        <span className="detail-meta-label"><FolderKanban size={13} />Project</span>
+                        <select
+                            className="input input-sm"
+                            value={projectId ?? ''}
+                            onChange={(e) => {
+                                const value = e.target.value ? Number(e.target.value) : undefined;
+                                setProjectId(value);
+                                save({projectId: value});
+                            }}
+                        >
+                            <option value="">No project</option>
+                            {projects.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="detail-notes-section">
+                    <span className="detail-meta-label"><StickyNote size={13} />Notes</span>
+                    <textarea
+                        className="input textarea detail-notes-textarea"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        onBlur={() => save()}
+                        placeholder="Add details…"
                     />
                 </div>
-
-                <div className="detail-field-row">
-                    <label><Flag />Priority</label>
-                    <select
-                        className="input input-sm"
-                        value={priority}
-                        onChange={(e) => {
-                            const value = Number(e.target.value);
-                            setPriority(value);
-                            save({priority: value});
-                        }}
-                    >
-                        {PRIORITIES.map((p) => (
-                            <option key={p.value} value={p.value}>{p.label}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <div className="detail-field-row">
-                    <label><FolderKanban />Project</label>
-                    <select
-                        className="input input-sm"
-                        value={projectId ?? ''}
-                        onChange={(e) => {
-                            const value = e.target.value ? Number(e.target.value) : undefined;
-                            setProjectId(value);
-                            save({projectId: value});
-                        }}
-                    >
-                        <option value="">No project</option>
-                        {projects.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                        ))}
-                    </select>
-                </div>
-
-                <label className="detail-notes-label"><StickyNote size={14} />Notes</label>
-                <textarea
-                    className="input textarea"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    onBlur={() => save()}
-                    placeholder="Add details…"
-                    rows={6}
-                />
 
                 <div className="detail-footer">
                     <button className="btn btn-danger" onClick={() => onDelete(task.id)}>Delete task</button>

@@ -26,6 +26,10 @@ export function DeleteTask(arg1) {
   return window['go']['main']['App']['DeleteTask'](arg1);
 }
 
+export function ExportTasksCSV() {
+  return window['go']['main']['App']['ExportTasksCSV']();
+}
+
 export function ListNotes() {
   return window['go']['main']['App']['ListNotes']();
 }

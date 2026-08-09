@@ -14,6 +14,8 @@ export function DeleteProject(arg1:number):Promise<void>;
 
 export function DeleteTask(arg1:number):Promise<void>;
 
+export function ExportTasksCSV():Promise<string>;
+
 export function ListNotes():Promise<Array<main.Note>>;
 
 export function ListProjects():Promise<Array<main.Project>>;

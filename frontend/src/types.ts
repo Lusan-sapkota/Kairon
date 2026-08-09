@@ -40,6 +40,24 @@ export function isDueToday(task: Task): boolean {
     return !!task.dueDate && task.dueDate === todayISO();
 }
 
+export function formatShortDate(iso: string): string {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+}
+
+function formatTooltipDate(iso: string): string {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, {weekday: 'short', month: 'short', day: 'numeric'});
+}
+
+export function taskTooltip(task: Task, project?: Project): string {
+    const parts: string[] = [];
+    if (task.dueDate) parts.push(`Due ${formatTooltipDate(task.dueDate)}${isOverdue(task) ? ' (overdue)' : ''}`);
+    if (task.priority > 0) parts.push(`${priorityLabel(task.priority)} priority`);
+    if (project) parts.push(project.name);
+    return parts.length > 0 ? `${task.title}\n${parts.join(' · ')}` : task.title;
+}
+
 export function greeting(): string {
     const hour = new Date().getHours();
     if (hour < 5) return 'Good night';

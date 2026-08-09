@@ -1,5 +1,17 @@
-import {useState} from 'react';
-import {LayoutGrid, CalendarDays, NotebookPen, ListChecks, ChevronsLeft, ChevronsRight, Plus, X} from 'lucide-react';
+import {useEffect, useState} from 'react';
+import {
+    LayoutGrid,
+    CalendarDays,
+    NotebookPen,
+    ListChecks,
+    ChevronsLeft,
+    ChevronsRight,
+    Plus,
+    X,
+    Sun,
+    Moon,
+    MonitorCog,
+} from 'lucide-react';
 import type {Project, Task, View} from '../types';
 import logo from '../assets/images/kairon-transparent.png';
 import {NewProjectModal} from './NewProjectModal';
@@ -13,7 +25,19 @@ type Props = {
     onDeleteProject: (id: number) => void;
 };
 
+type ThemePref = 'system' | 'light' | 'dark';
+
 const COLLAPSED_KEY = 'kairon.sidebarCollapsed';
+const THEME_KEY = 'kairon.theme';
+const THEME_ORDER: Record<ThemePref, ThemePref> = {system: 'light', light: 'dark', dark: 'system'};
+const THEME_LABEL: Record<ThemePref, string> = {system: 'System', light: 'Light', dark: 'Dark'};
+
+function resolveTheme(pref: ThemePref): 'light' | 'dark' {
+    if (pref === 'system') {
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    return pref;
+}
 
 function isSameView(a: View, b: View): boolean {
     if (a.kind !== b.kind) return false;
@@ -32,6 +56,9 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
     const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSED_KEY) === '1');
     const [addModalOpen, setAddModalOpen] = useState(false);
     const [activeTag, setActiveTag] = useState<string | null>(null);
+    const [themePref, setThemePref] = useState<ThemePref>(
+        () => (localStorage.getItem(THEME_KEY) as ThemePref | null) ?? 'system'
+    );
 
     const openTaskCount = tasks.filter((t) => !t.done).length;
 
@@ -45,6 +72,25 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
             return next;
         });
     }
+
+    useEffect(() => {
+        const apply = () => document.documentElement.setAttribute('data-theme', resolveTheme(themePref));
+        apply();
+        if (themePref !== 'system') return;
+        const mq = window.matchMedia('(prefers-color-scheme: light)');
+        mq.addEventListener('change', apply);
+        return () => mq.removeEventListener('change', apply);
+    }, [themePref]);
+
+    function cycleTheme() {
+        setThemePref((prev) => {
+            const next = THEME_ORDER[prev];
+            localStorage.setItem(THEME_KEY, next);
+            return next;
+        });
+    }
+
+    const ThemeIcon = themePref === 'system' ? MonitorCog : themePref === 'light' ? Sun : Moon;
 
     return (
         <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
@@ -159,6 +205,19 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                         <p className="empty-hint">{activeTag ? `No projects tagged "${activeTag}"` : 'No projects yet'}</p>
                     )}
                 </div>
+            </div>
+
+            <div className="sidebar-footer">
+                <button
+                    className="nav-item"
+                    onClick={cycleTheme}
+                    title={`Theme: ${THEME_LABEL[themePref]} (click to change)`}
+                >
+                    <span className="nav-icon">
+                        <ThemeIcon size={16} />
+                    </span>
+                    {!collapsed && `Theme: ${THEME_LABEL[themePref]}`}
+                </button>
             </div>
 
             {addModalOpen && (

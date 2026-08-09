@@ -60,4 +60,6 @@ export const api = {
             new main.NoteInput({id: note.id, title: note.title, content: note.content, projectId: note.projectId})
         ),
     deleteNote: (id: number): Promise<void> => Go.DeleteNote(id),
+
+    exportTasksCSV: (): Promise<string> => Go.ExportTasksCSV(),
 };

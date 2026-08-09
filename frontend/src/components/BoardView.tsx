@@ -1,8 +1,8 @@
-import {useEffect, useRef, useState} from 'react';
+import {useLayoutEffect, useRef, useState} from 'react';
 import type {CSSProperties} from 'react';
 import {ChevronLeft, ChevronRight, Check, X} from 'lucide-react';
 import type {Project, Task} from '../types';
-import {greeting, priorityColor, todayISO} from '../types';
+import {formatShortDate, greeting, isOverdue, priorityColor, priorityLabel, taskTooltip, todayISO} from '../types';
 import {NewTaskModal} from './NewTaskModal';
 
 type Props = {
@@ -25,7 +25,7 @@ function useColumnCount(minColumnWidth: number, fallback: number) {
     const ref = useRef<HTMLDivElement>(null);
     const [count, setCount] = useState(fallback);
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         const el = ref.current;
         if (!el) return;
         const update = () => setCount(Math.max(3, Math.floor(el.clientWidth / minColumnWidth)));
@@ -151,6 +151,7 @@ export function BoardView({
                                     accentColor={p.color}
                                     tasks={projectTasks}
                                     projectById={projectById}
+                                    showTaskMeta
                                     onQuickAdd={(title) => onAddTask({title, priority: 0, projectId: p.id})}
                                     onOpenAddModal={() => setAddModalContext({projectId: p.id})}
                                     onToggle={onToggleTask}
@@ -191,6 +192,7 @@ type ColumnProps = {
     tasks: Task[];
     projectById: Map<number, Project>;
     showProjectDot?: boolean;
+    showTaskMeta?: boolean;
     onQuickAdd: (title: string) => void;
     onOpenAddModal: () => void;
     onToggle: (id: number) => void;
@@ -207,6 +209,7 @@ function BoardColumn({
     tasks,
     projectById,
     showProjectDot,
+    showTaskMeta,
     onQuickAdd,
     onOpenAddModal,
     onToggle,
@@ -216,7 +219,6 @@ function BoardColumn({
 }: ColumnProps) {
     const [draft, setDraft] = useState('');
     const [dragOverId, setDragOverId] = useState<number | null>(null);
-    const [columnDragOver, setColumnDragOver] = useState(false);
     const clickTimer = useRef<number | null>(null);
 
     function submit(e: React.FormEvent) {
@@ -254,18 +256,11 @@ function BoardColumn({
 
     return (
         <div
-            className={`board-column ${highlighted ? 'board-column-today' : ''} ${columnDragOver ? 'board-column-drag-over' : ''}`}
+            className={`board-column ${highlighted ? 'board-column-today' : ''}`}
             style={accentColor ? ({'--tile-accent': accentColor} as CSSProperties) : undefined}
-            onDragOver={(e) => {
-                e.preventDefault();
-                setColumnDragOver(true);
-            }}
-            onDragLeave={(e) => {
-                if (e.target === e.currentTarget) setColumnDragOver(false);
-            }}
+            onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
                 e.preventDefault();
-                setColumnDragOver(false);
                 const draggedId = readDraggedId(e);
                 if (draggedId !== null) onDropTask(draggedId, null);
             }}
@@ -293,10 +288,7 @@ function BoardColumn({
                                 e.dataTransfer.setData('text/plain', String(t.id));
                                 e.dataTransfer.effectAllowed = 'move';
                             }}
-                            onDragEnd={() => {
-                                setDragOverId(null);
-                                setColumnDragOver(false);
-                            }}
+                            onDragEnd={() => setDragOverId(null)}
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -307,12 +299,12 @@ function BoardColumn({
                                 e.preventDefault();
                                 e.stopPropagation();
                                 setDragOverId(null);
-                                setColumnDragOver(false);
                                 const draggedId = readDraggedId(e);
                                 if (draggedId !== null && draggedId !== t.id) onDropTask(draggedId, t.id);
                             }}
                             onClick={() => handleTaskClick(t)}
                             onDoubleClick={() => handleTaskDoubleClick(t)}
+                            title={taskTooltip(t, project)}
                         >
                             <button
                                 className={`checkbox ${t.done ? 'checkbox-checked' : ''}`}
@@ -325,11 +317,29 @@ function BoardColumn({
                                 {t.done && <Check />}
                             </button>
                             <span className="board-task-title">{t.title}</span>
-                            {t.priority > 0 && (
-                                <span className="priority-dot" style={{background: priorityColor(t.priority)}} />
+                            {showTaskMeta ? (
+                                <span className="board-task-meta">
+                                    {t.dueDate && (
+                                        <span className={isOverdue(t) ? 'board-task-meta-overdue' : ''}>
+                                            {formatShortDate(t.dueDate)}
+                                        </span>
+                                    )}
+                                    {t.priority > 0 && (
+                                        <span
+                                            className="board-task-meta-priority"
+                                            style={{color: priorityColor(t.priority)}}
+                                        >
+                                            {priorityLabel(t.priority)}
+                                        </span>
+                                    )}
+                                </span>
+                            ) : (
+                                t.priority > 0 && (
+                                    <span className="priority-dot" style={{background: priorityColor(t.priority)}} />
+                                )
                             )}
                             {showProjectDot && project && (
-                                <span className="dot" style={{background: project.color}} title={project.name} />
+                                <span className="dot" style={{background: project.color}} />
                             )}
                             <button
                                 className="icon-btn ghost"

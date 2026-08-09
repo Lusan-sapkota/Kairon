@@ -1,5 +1,5 @@
 import {useMemo, useState} from 'react';
-import {Plus, CircleCheck, SearchX} from 'lucide-react';
+import {Plus, CircleCheck, SearchX, Download} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {PRIORITIES, isDueToday, isOverdue} from '../types';
 import {TaskRow} from './TaskRow';
@@ -12,6 +12,7 @@ type Props = {
     onToggleTask: (id: number) => void;
     onSelectTask: (task: Task) => void;
     onDeleteTask: (id: number) => void;
+    onExportTasks: () => void;
 };
 
 type FilterKey = 'all' | 'active' | 'overdue' | 'today' | 'noDate' | 'highPriority' | 'completed';
@@ -63,7 +64,7 @@ function compareTasks(a: Task, b: Task, sort: SortKey): number {
     }
 }
 
-export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelectTask, onDeleteTask}: Props) {
+export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelectTask, onDeleteTask, onExportTasks}: Props) {
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState<FilterKey>('all');
     const [sort, setSort] = useState<SortKey>('priority');
@@ -167,9 +168,14 @@ export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelect
         <div className="all-tasks-view">
             <div className="task-view-header">
                 <h2 className="view-title">All Tasks</h2>
-                <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add task">
-                    <Plus size={16} />
-                </button>
+                <div className="task-view-header-actions">
+                    <button className="btn btn-ghost btn-sm" onClick={onExportTasks} title="Export all tasks as CSV">
+                        <Download size={14} />Export CSV
+                    </button>
+                    <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add task">
+                        <Plus size={16} />
+                    </button>
+                </div>
             </div>
 
             <div className="all-tasks-layout">

@@ -8,7 +8,14 @@ import {BoardView} from './components/BoardView';
 import {CalendarView} from './components/CalendarView';
 import {NotesView} from './components/NotesView';
 import {TaskDetail} from './components/TaskDetail';
+import {ConfirmDialog} from './components/ConfirmDialog';
 import type {Note, Project, Task, View} from './types';
+
+type PendingConfirm = {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+};
 
 function App() {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -18,6 +25,8 @@ function App() {
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [toast, setToast] = useState('');
+    const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
 
     async function refreshAll() {
         const [p, t, n] = await Promise.all([api.listProjects(), api.listTasks(), api.listNotes()]);
@@ -31,6 +40,12 @@ function App() {
             .catch((err) => setError(String(err)))
             .finally(() => setLoading(false));
     }, []);
+
+    useEffect(() => {
+        if (!toast) return;
+        const timer = window.setTimeout(() => setToast(''), 4000);
+        return () => window.clearTimeout(timer);
+    }, [toast]);
 
     async function withErrorHandling(fn: () => Promise<void>) {
         try {
@@ -54,11 +69,20 @@ function App() {
         });
     }
 
-    function handleDeleteTask(id: number) {
+    function performDeleteTask(id: number) {
         withErrorHandling(async () => {
             await api.deleteTask(id);
             setTasks(await api.listTasks());
             if (selectedTaskId === id) setSelectedTaskId(null);
+        });
+    }
+
+    function handleDeleteTask(id: number) {
+        const task = tasks.find((t) => t.id === id);
+        setPendingConfirm({
+            title: 'Delete task',
+            message: `Delete "${task?.title ?? 'this task'}"? This can't be undone.`,
+            onConfirm: () => performDeleteTask(id),
         });
     }
 
@@ -92,13 +116,24 @@ function App() {
         });
     }
 
-    function handleDeleteProject(id: number) {
+    function performDeleteProject(id: number) {
         withErrorHandling(async () => {
             await api.deleteProject(id);
             await refreshAll();
             if (view.kind === 'project' && view.projectId === id) {
                 setView({kind: 'all'});
             }
+        });
+    }
+
+    function handleDeleteProject(id: number) {
+        const project = projects.find((p) => p.id === id);
+        const taskCount = tasks.filter((t) => t.projectId === id).length;
+        const impact = taskCount > 0 ? ` ${taskCount} task${taskCount === 1 ? '' : 's'} will be moved to Inbox.` : '';
+        setPendingConfirm({
+            title: 'Delete project',
+            message: `Delete "${project?.name ?? 'this project'}"?${impact} This can't be undone.`,
+            onConfirm: () => performDeleteProject(id),
         });
     }
 
@@ -120,6 +155,13 @@ function App() {
         withErrorHandling(async () => {
             await api.deleteNote(id);
             setNotes(await api.listNotes());
+        });
+    }
+
+    function handleExportTasks() {
+        withErrorHandling(async () => {
+            const path = await api.exportTasksCSV();
+            if (path) setToast(`Exported ${tasks.length} task${tasks.length === 1 ? '' : 's'} to ${path}`);
         });
     }
 
@@ -161,6 +203,7 @@ function App() {
                 onToggleTask={handleToggleTask}
                 onSelectTask={(t) => setSelectedTaskId(t.id)}
                 onDeleteTask={handleDeleteTask}
+                onExportTasks={handleExportTasks}
             />
         );
     } else if (view.kind === 'notes') {
@@ -207,6 +250,11 @@ function App() {
                         {error}
                     </div>
                 )}
+                {toast && (
+                    <div className="toast-banner" onClick={() => setToast('')}>
+                        {toast}
+                    </div>
+                )}
                 {content}
             </main>
 
@@ -217,6 +265,18 @@ function App() {
                     onClose={() => setSelectedTaskId(null)}
                     onSave={handleSaveTask}
                     onDelete={handleDeleteTask}
+                />
+            )}
+
+            {pendingConfirm && (
+                <ConfirmDialog
+                    title={pendingConfirm.title}
+                    message={pendingConfirm.message}
+                    onConfirm={() => {
+                        pendingConfirm.onConfirm();
+                        setPendingConfirm(null);
+                    }}
+                    onCancel={() => setPendingConfirm(null)}
                 />
             )}
         </div>

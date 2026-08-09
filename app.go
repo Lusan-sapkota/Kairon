@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/csv"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -244,6 +246,81 @@ func (a *App) getTask(id int64) (*Task, error) {
 	}
 	t.Done = done != 0
 	return &t, nil
+}
+
+// ExportTasksCSV prompts the user for a save location via a native dialog and writes every
+// task to a CSV file there. Returns an empty path if the user cancels the dialog.
+func (a *App) ExportTasksCSV() (string, error) {
+	rows, err := a.db.Query(`
+		SELECT t.title, t.notes, t.done, t.priority, t.due_date, p.name, t.created_at, t.updated_at
+		FROM tasks t
+		LEFT JOIN projects p ON p.id = t.project_id
+		ORDER BY t.created_at ASC
+	`)
+	if err != nil {
+		return "", err
+	}
+	defer rows.Close()
+
+	type taskRecord struct {
+		title, notes         string
+		done                 int
+		priority             int
+		dueDate, project     sql.NullString
+		createdAt, updatedAt string
+	}
+	var records []taskRecord
+	for rows.Next() {
+		var r taskRecord
+		if err := rows.Scan(&r.title, &r.notes, &r.done, &r.priority, &r.dueDate, &r.project, &r.createdAt, &r.updatedAt); err != nil {
+			return "", err
+		}
+		records = append(records, r)
+	}
+	if err := rows.Err(); err != nil {
+		return "", err
+	}
+
+	path, err := runtime.SaveFileDialog(a.ctx, runtime.SaveDialogOptions{
+		Title:           "Export tasks as CSV",
+		DefaultFilename: fmt.Sprintf("kairon-tasks-%s.csv", time.Now().Format("2006-01-02")),
+		Filters: []runtime.FileFilter{
+			{DisplayName: "CSV Files (*.csv)", Pattern: "*.csv"},
+		},
+	})
+	if err != nil || path == "" {
+		return "", err
+	}
+
+	f, err := os.Create(path)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	if err := w.Write([]string{"Title", "Notes", "Done", "Priority", "Due Date", "Project", "Created At", "Updated At"}); err != nil {
+		return "", err
+	}
+
+	priorityLabels := map[int]string{0: "None", 1: "Low", 2: "Medium", 3: "High"}
+	for _, r := range records {
+		done := "No"
+		if r.done != 0 {
+			done = "Yes"
+		}
+		if err := w.Write([]string{
+			r.title, r.notes, done, priorityLabels[r.priority], r.dueDate.String, r.project.String, r.createdAt, r.updatedAt,
+		}); err != nil {
+			return "", err
+		}
+	}
+	w.Flush()
+	if err := w.Error(); err != nil {
+		return "", err
+	}
+
+	return path, nil
 }
 
 // ---------- Notes ----------

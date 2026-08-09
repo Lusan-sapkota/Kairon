@@ -1,6 +1,6 @@
 import {Check, X, CalendarClock} from 'lucide-react';
 import type {Project, Task} from '../types';
-import {isOverdue, priorityColor} from '../types';
+import {formatShortDate, isOverdue, priorityColor, taskTooltip} from '../types';
 
 type Props = {
     task: Task;
@@ -9,11 +9,6 @@ type Props = {
     onSelect: (task: Task) => void;
     onDelete: (id: number) => void;
 };
-
-function formatDate(iso: string): string {
-    const [y, m, d] = iso.split('-').map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
-}
 
 export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
     return (
@@ -26,7 +21,7 @@ export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
                 {task.done && <Check />}
             </button>
 
-            <div className="task-main" onClick={() => onSelect(task)}>
+            <div className="task-main" onClick={() => onSelect(task)} title={taskTooltip(task, project)}>
                 <span className="task-title">{task.title}</span>
                 <div className="task-meta">
                     {project && (
@@ -36,7 +31,7 @@ export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
                     )}
                     {task.dueDate && (
                         <span className={`chip ${isOverdue(task) ? 'chip-overdue' : ''}`}>
-                            <CalendarClock /> {formatDate(task.dueDate)}
+                            <CalendarClock /> {formatShortDate(task.dueDate)}
                         </span>
                     )}
                     {task.priority > 0 && (
