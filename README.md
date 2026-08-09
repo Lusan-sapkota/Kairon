@@ -23,11 +23,16 @@
 
 ## Download
 
-Get the packaged app from GitHub Releases — no need to build from source.
+Get the app from **[Releases](https://github.com/Lusan-sapkota/Kairon/releases)** — no need to build from source.
 
-1. Open **[Releases](https://github.com/Lusan-sapkota/Kairon/releases)**.
-2. Under **Assets**, download the application bundle for your OS.
-3. Unpack or install if needed, then run **Kairon**.
+| OS | Asset | How to run |
+|----|--------|------------|
+| **Linux** (Debian/Ubuntu) | `kairon_*_amd64.deb` | `sudo apt install ./kairon_*_amd64.deb` then open **Kairon** from the app menu |
+| **Linux** (any) | `kairon-linux-amd64` | `chmod +x kairon-linux-amd64 && ./kairon-linux-amd64` |
+| **Windows** | `kairon-windows-amd64.exe` | Run the `.exe` |
+| **macOS** | `kairon-darwin-universal.zip` | Unzip and open the `.app` |
+
+The `.deb` installs to `/usr/bin/kairon` and depends on `libgtk-3-0` + `libwebkit2gtk-4.1-0` (Ubuntu 22.04+ / Debian 12+).
 
 Your data stays local in SQLite (see [Data storage](#data-storage)). For clicks, drag-and-drop, and hover tooltips, see **[GUIDE.md](GUIDE.md)**.
 

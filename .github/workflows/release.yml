@@ -62,6 +62,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev
 
+      - name: Install nfpm (Linux .deb)
+        if: runner.os == 'Linux'
+        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@v2.43.1
+
       - name: Build
         shell: bash
         run: |
@@ -86,6 +90,10 @@ jobs:
           else
             cp "build/bin/${{ matrix.binary }}" "dist/${{ matrix.artifact }}"
             chmod +x "dist/${{ matrix.artifact }}"
+            # Installable .deb for Debian/Ubuntu (pulls GTK + WebKit via apt)
+            TAG='${{ inputs.tag || github.ref_name }}'
+            export VERSION="${TAG#v}"
+            nfpm package --config packaging/nfpm.yaml --packager deb --target "dist/kairon_${VERSION}_amd64.deb"
           fi
           ls -lah dist
 
@@ -102,6 +110,11 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v') || inputs.tag != ''
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -120,6 +133,7 @@ jobs:
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
           name: Kairon ${{ inputs.tag || github.ref_name }}
+          body_path: .github/release-body.md
           draft: false
           generate_release_notes: true
           files: upload/*

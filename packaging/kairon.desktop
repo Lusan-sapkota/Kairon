@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Kairon
+GenericName=Planner
+Comment=Local-first desktop planner for tasks, projects, calendar, and notes
+Exec=kairon
+Icon=kairon
+Terminal=false
+Categories=Office;ProjectManagement;Calendar;
+Keywords=tasks;projects;calendar;notes;planner;
+StartupNotify=true
