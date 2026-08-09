@@ -47,6 +47,10 @@ export const api = {
         ),
     toggleTask: (id: number): Promise<Task> => Go.ToggleTaskDone(id),
     deleteTask: (id: number): Promise<void> => Go.DeleteTask(id),
+    setTaskDueDate: (id: number, dueDate: string | undefined, sortOrder: number): Promise<Task> =>
+        Go.SetTaskDueDate(id, dueDate ?? null, sortOrder),
+    setTaskProject: (id: number, projectId: number | undefined, sortOrder: number): Promise<Task> =>
+        Go.SetTaskProject(id, projectId ?? null, sortOrder),
 
     listNotes: (): Promise<Note[]> => Go.ListNotes(),
     createNote: (input: {title: string; content: string; projectId?: number}): Promise<Note> =>

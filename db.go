@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS tasks (
 	done       INTEGER NOT NULL DEFAULT 0,
 	priority   INTEGER NOT NULL DEFAULT 0,
 	due_date   TEXT,
+	sort_order REAL NOT NULL DEFAULT 0,
 	created_at TEXT NOT NULL,
 	updated_at TEXT NOT NULL
 );
@@ -61,5 +62,47 @@ func openDB() (*sql.DB, error) {
 		return nil, fmt.Errorf("could not initialize schema: %w", err)
 	}
 
+	if err := migrate(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("could not migrate schema: %w", err)
+	}
+
 	return db, nil
+}
+
+// migrate applies incremental schema changes to databases created before a column existed.
+func migrate(db *sql.DB) error {
+	rows, err := db.Query(`PRAGMA table_info(tasks)`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	hasSortOrder := false
+	for rows.Next() {
+		var cid int
+		var name, colType string
+		var notNull, pk int
+		var dfltValue sql.NullString
+		if err := rows.Scan(&cid, &name, &colType, &notNull, &dfltValue, &pk); err != nil {
+			return err
+		}
+		if name == "sort_order" {
+			hasSortOrder = true
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	if !hasSortOrder {
+		if _, err := db.Exec(`ALTER TABLE tasks ADD COLUMN sort_order REAL NOT NULL DEFAULT 0`); err != nil {
+			return err
+		}
+		if _, err := db.Exec(`UPDATE tasks SET sort_order = id WHERE sort_order = 0`); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

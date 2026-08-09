@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -22,6 +24,7 @@ func NewApp() *App {
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	runtime.WindowMaximise(ctx)
 
 	db, err := openDB()
 	if err != nil {
@@ -115,7 +118,7 @@ func (a *App) DeleteProject(id int64) error {
 
 func (a *App) ListTasks() ([]Task, error) {
 	rows, err := a.db.Query(`
-		SELECT id, project_id, title, notes, done, priority, due_date, created_at, updated_at
+		SELECT id, project_id, title, notes, done, priority, due_date, sort_order, created_at, updated_at
 		FROM tasks ORDER BY done ASC, due_date IS NULL, due_date ASC, priority DESC, created_at ASC
 	`)
 	if err != nil {
@@ -127,7 +130,7 @@ func (a *App) ListTasks() ([]Task, error) {
 	for rows.Next() {
 		var t Task
 		var done int
-		if err := rows.Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.CreatedAt, &t.UpdatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.SortOrder, &t.CreatedAt, &t.UpdatedAt); err != nil {
 			return nil, err
 		}
 		t.Done = done != 0
@@ -141,11 +144,12 @@ func (a *App) CreateTask(input TaskInput) (*Task, error) {
 		return nil, fmt.Errorf("task title is required")
 	}
 	ts := now()
+	sortOrder := float64(time.Now().UnixNano())
 
 	res, err := a.db.Exec(
-		`INSERT INTO tasks (project_id, title, notes, done, priority, due_date, created_at, updated_at)
-		 VALUES (?, ?, ?, 0, ?, ?, ?, ?)`,
-		input.ProjectID, input.Title, input.Notes, input.Priority, input.DueDate, ts, ts,
+		`INSERT INTO tasks (project_id, title, notes, done, priority, due_date, sort_order, created_at, updated_at)
+		 VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)`,
+		input.ProjectID, input.Title, input.Notes, input.Priority, input.DueDate, sortOrder, ts, ts,
 	)
 	if err != nil {
 		return nil, err
@@ -156,7 +160,7 @@ func (a *App) CreateTask(input TaskInput) (*Task, error) {
 	}
 	return &Task{
 		ID: id, ProjectID: input.ProjectID, Title: input.Title, Notes: input.Notes,
-		Done: false, Priority: input.Priority, DueDate: input.DueDate, CreatedAt: ts, UpdatedAt: ts,
+		Done: false, Priority: input.Priority, DueDate: input.DueDate, SortOrder: sortOrder, CreatedAt: ts, UpdatedAt: ts,
 	}, nil
 }
 
@@ -188,6 +192,32 @@ func (a *App) ToggleTaskDone(id int64) (*Task, error) {
 	return a.getTask(id)
 }
 
+// SetTaskDueDate moves a task to a new due date and board position, leaving its project untouched.
+// Used when a card is dragged between day columns (or reordered within one) on the board.
+func (a *App) SetTaskDueDate(id int64, dueDate *string, sortOrder float64) (*Task, error) {
+	_, err := a.db.Exec(
+		`UPDATE tasks SET due_date = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
+		dueDate, sortOrder, now(), id,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return a.getTask(id)
+}
+
+// SetTaskProject moves a task to a new project and board position, leaving its due date untouched.
+// Used when a card is dragged between project columns (or reordered within one) on the board.
+func (a *App) SetTaskProject(id int64, projectId *int64, sortOrder float64) (*Task, error) {
+	_, err := a.db.Exec(
+		`UPDATE tasks SET project_id = ?, sort_order = ?, updated_at = ? WHERE id = ?`,
+		projectId, sortOrder, now(), id,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return a.getTask(id)
+}
+
 func (a *App) DeleteTask(id int64) error {
 	_, err := a.db.Exec(`DELETE FROM tasks WHERE id = ?`, id)
 	return err
@@ -197,9 +227,9 @@ func (a *App) getTask(id int64) (*Task, error) {
 	var t Task
 	var done int
 	err := a.db.QueryRow(`
-		SELECT id, project_id, title, notes, done, priority, due_date, created_at, updated_at
+		SELECT id, project_id, title, notes, done, priority, due_date, sort_order, created_at, updated_at
 		FROM tasks WHERE id = ?
-	`, id).Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.CreatedAt, &t.UpdatedAt)
+	`, id).Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.SortOrder, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

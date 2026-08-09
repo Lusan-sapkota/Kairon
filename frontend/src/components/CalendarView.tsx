@@ -1,8 +1,9 @@
 import {useMemo, useState} from 'react';
 import type {Project, Task} from '../types';
-import {todayISO} from '../types';
+import {greeting, todayISO} from '../types';
 import {TaskRow} from './TaskRow';
-import {TaskComposer} from './TaskComposer';
+import {FloatingQuickAdd} from './FloatingQuickAdd';
+import greetImage from '../assets/images/greet-inverted.png';
 
 type Props = {
     tasks: Task[];
@@ -101,16 +102,27 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
             </div>
 
             <div className="calendar-day-panel">
-                <h3 className="day-panel-title">
-                    {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                    })}
-                </h3>
-                <TaskComposer projects={projects} defaultDueDate={selectedDate} onAdd={onAddTask} />
+                {selectedDate === todayISO() ? (
+                    <div className="greeting-block">
+                        <img className="greeting-image" src={greetImage} alt="" />
+                        <div>
+                            <h2 className="view-title board-greeting">{greeting()}, Chief</h2>
+                            <p className="day-panel-subtitle">Here's what's on your plate today.</p>
+                        </div>
+                    </div>
+                ) : (
+                    <h3 className="day-panel-title">
+                        {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric',
+                        })}
+                    </h3>
+                )}
                 <div className="task-list">
-                    {selectedTasks.length === 0 && <p className="empty-hint">No tasks due this day</p>}
+                    {selectedTasks.length === 0 && (
+                        <p className="empty-hint">Nothing here yet — use the + icon to add a task for this day.</p>
+                    )}
                     {selectedTasks.map((t) => (
                         <TaskRow
                             key={t.id}
@@ -123,6 +135,8 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
                     ))}
                 </div>
             </div>
+
+            <FloatingQuickAdd projects={projects} initialDueDate={selectedDate} onAdd={onAddTask} />
         </div>
     );
 }

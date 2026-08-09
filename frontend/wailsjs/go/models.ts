@@ -82,6 +82,7 @@ export namespace main {
 	    done: boolean;
 	    priority: number;
 	    dueDate?: string;
+	    sortOrder: number;
 	    createdAt: string;
 	    updatedAt: string;
 	
@@ -98,6 +99,7 @@ export namespace main {
 	        this.done = source["done"];
 	        this.priority = source["priority"];
 	        this.dueDate = source["dueDate"];
+	        this.sortOrder = source["sortOrder"];
 	        this.createdAt = source["createdAt"];
 	        this.updatedAt = source["updatedAt"];
 	    }

@@ -1,4 +1,4 @@
-module myproject
+module kairon
 
 go 1.25.0
 

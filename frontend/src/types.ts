@@ -39,3 +39,12 @@ export function isOverdue(task: Task): boolean {
 export function isDueToday(task: Task): boolean {
     return !!task.dueDate && task.dueDate === todayISO();
 }
+
+export function greeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 5) return 'Good night';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    if (hour < 21) return 'Good evening';
+    return 'Good night';
+}

@@ -38,6 +38,14 @@ export function ListTasks() {
   return window['go']['main']['App']['ListTasks']();
 }
 
+export function SetTaskDueDate(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SetTaskDueDate'](arg1, arg2, arg3);
+}
+
+export function SetTaskProject(arg1, arg2, arg3) {
+  return window['go']['main']['App']['SetTaskProject'](arg1, arg2, arg3);
+}
+
 export function ToggleTaskDone(arg1) {
   return window['go']['main']['App']['ToggleTaskDone'](arg1);
 }

@@ -6,10 +6,14 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/linux"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+//go:embed frontend/src/assets/images/kairon-transparent.png
+var windowIcon []byte
 
 func main() {
 	// Create an instance of the app structure
@@ -17,9 +21,12 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:  "Kairon",
-		Width:  1200,
-		Height: 800,
+		Title:            "Kairon",
+		Width:            1400,
+		Height:           900,
+		MinWidth:         960,
+		MinHeight:        640,
+		WindowStartState: options.Maximised,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
@@ -28,6 +35,9 @@ func main() {
 		OnShutdown:       app.shutdown,
 		Bind: []interface{}{
 			app,
+		},
+		Linux: &linux.Options{
+			Icon: windowIcon,
 		},
 	})
 

@@ -1,3 +1,7 @@
 build/bin
 node_modules
 frontend/dist
+/kairon
+/myproject
+*.log
+.DS_Store

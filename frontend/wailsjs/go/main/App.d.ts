@@ -20,6 +20,10 @@ export function ListProjects():Promise<Array<main.Project>>;
 
 export function ListTasks():Promise<Array<main.Task>>;
 
+export function SetTaskDueDate(arg1:number,arg2:any,arg3:number):Promise<main.Task>;
+
+export function SetTaskProject(arg1:number,arg2:any,arg3:number):Promise<main.Task>;
+
 export function ToggleTaskDone(arg1:number):Promise<main.Task>;
 
 export function UpdateNote(arg1:main.NoteInput):Promise<main.Note>;

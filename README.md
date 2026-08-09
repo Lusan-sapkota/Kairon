@@ -1,13 +1,13 @@
 # Kairon
 
-A simple, self-contained planner app — tasks, projects, a calendar, and notes in one lightweight desktop app. Built with [Wails](https://wails.io) (Go) and React + TypeScript, with a local SQLite database for storage.
+A simple, self-contained planner app  tasks, projects, a calendar, and notes in one lightweight desktop app. Built with [Wails](https://wails.io) (Go) and React + TypeScript, with a local SQLite database for storage.
 
 ## Features
 
-- **Tasks** — quick add, due dates, priority levels, done/undone toggling
-- **Projects** — group tasks and notes under color-coded projects
-- **Calendar** — a month view showing tasks by due date, with a per-day task list
-- **Notes** — freeform notes, optionally attached to a project
+- **Tasks**  quick add, due dates, priority levels, done/undone toggling
+- **Projects**  group tasks and notes under color-coded projects
+- **Calendar**  a month view showing tasks by due date, with a per-day task list
+- **Notes**  freeform notes, optionally attached to a project
 
 All data is stored locally in a SQLite file under your user config directory (no network access, no accounts).
 

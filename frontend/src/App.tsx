@@ -3,11 +3,11 @@ import './App.css';
 import {api} from './api';
 import {Sidebar} from './components/Sidebar';
 import {TaskListView} from './components/TaskListView';
+import {BoardView} from './components/BoardView';
 import {CalendarView} from './components/CalendarView';
 import {NotesView} from './components/NotesView';
 import {TaskDetail} from './components/TaskDetail';
 import type {Note, Project, Task, View} from './types';
-import {isDueToday, isOverdue} from './types';
 
 function App() {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -39,7 +39,7 @@ function App() {
         }
     }
 
-    function handleAddTask(input: {title: string; dueDate?: string; priority: number; projectId?: number}) {
+    function handleAddTask(input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) {
         withErrorHandling(async () => {
             await api.createTask(input);
             setTasks(await api.listTasks());
@@ -64,6 +64,22 @@ function App() {
     function handleSaveTask(input: {id: number; title: string; notes: string; dueDate?: string; priority: number; projectId?: number}) {
         withErrorHandling(async () => {
             await api.updateTask(input);
+            setTasks(await api.listTasks());
+        });
+    }
+
+    function handleMoveTaskDate(id: number, dueDate: string | undefined, sortOrder: number) {
+        setTasks((prev) => prev.map((t) => (t.id === id ? {...t, dueDate, sortOrder} : t)));
+        withErrorHandling(async () => {
+            await api.setTaskDueDate(id, dueDate, sortOrder);
+            setTasks(await api.listTasks());
+        });
+    }
+
+    function handleMoveTaskProject(id: number, projectId: number | undefined, sortOrder: number) {
+        setTasks((prev) => prev.map((t) => (t.id === id ? {...t, projectId, sortOrder} : t)));
+        withErrorHandling(async () => {
+            await api.setTaskProject(id, projectId, sortOrder);
             setTasks(await api.listTasks());
         });
     }
@@ -112,18 +128,16 @@ function App() {
     if (loading) {
         content = <div className="loading-state">Loading…</div>;
     } else if (view.kind === 'today') {
-        const todayTasks = tasks.filter((t) => isOverdue(t) || isDueToday(t));
         content = (
-            <TaskListView
-                title="Today"
-                tasks={todayTasks}
+            <BoardView
+                tasks={tasks}
                 projects={projects}
-                defaultProjectId={undefined}
-                emptyHint="No tasks due today. Enjoy the calm."
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}
                 onSelectTask={(t) => setSelectedTaskId(t.id)}
                 onDeleteTask={handleDeleteTask}
+                onMoveTaskDate={handleMoveTaskDate}
+                onMoveTaskProject={handleMoveTaskProject}
             />
         );
     } else if (view.kind === 'upcoming') {
@@ -181,6 +195,12 @@ function App() {
 
     return (
         <div id="App">
+            <div className="bg-layer" aria-hidden="true">
+                <div className="orb orb-1" />
+                <div className="orb orb-2" />
+                <div className="orb orb-3" />
+            </div>
+
             <Sidebar
                 projects={projects}
                 tasks={tasks}

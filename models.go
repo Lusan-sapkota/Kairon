@@ -17,6 +17,7 @@ type Task struct {
 	Done      bool    `json:"done"`
 	Priority  int     `json:"priority"` // 0 none, 1 low, 2 medium, 3 high
 	DueDate   *string `json:"dueDate"`  // "YYYY-MM-DD"
+	SortOrder float64 `json:"sortOrder"`
 	CreatedAt string  `json:"createdAt"`
 	UpdatedAt string  `json:"updatedAt"`
 }
