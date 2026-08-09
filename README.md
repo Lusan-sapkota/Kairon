@@ -4,6 +4,10 @@
 
 <h1 align="center">Kairon</h1>
 
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
+</p>
+
 A simple, self-contained planner app — tasks, projects, a calendar, and notes in one lightweight desktop app. Built with [Wails](https://wails.io) (Go) and React + TypeScript, with a local SQLite database for storage. No network access, no accounts — everything stays on your machine.
 
 ## Features
@@ -52,3 +56,11 @@ To build a redistributable, production mode package, use `wails build`.
 
 You can configure the project by editing `wails.json`. More information about the project settings can be found
 here: https://wails.io/docs/reference/project-config
+
+## Contributing
+
+Bug reports, feature suggestions, and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the dev setup, project layout, and PR guidelines.
+
+## License
+
+Kairon is licensed under the [MIT License](LICENSE).
