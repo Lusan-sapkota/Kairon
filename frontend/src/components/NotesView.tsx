@@ -1,5 +1,7 @@
 import {useEffect, useState} from 'react';
-import {Plus, NotebookPen} from 'lucide-react';
+import {Plus, NotebookPen, Eye, Pencil} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type {Note, Project} from '../types';
 
 type Props = {
@@ -14,6 +16,23 @@ function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
 }
 
+// Converts pasted `<Image src="…" alt="…" caption="…" />` component tags into
+// standard Markdown image syntax so they render like any other markdown image.
+function normalizeMarkdown(md: string): string {
+    return md.replace(/<Image\b([^>]*)\/?>/gi, (_match, rawAttrs: string) => {
+        const attrs: Record<string, string> = {};
+        const attrPattern = /(\w+)\s*=\s*"([^"]*)"|(\w+)\s*=\s*'([^']*)'/g;
+        let m: RegExpExecArray | null;
+        while ((m = attrPattern.exec(rawAttrs))) {
+            const key = (m[1] ?? m[3]).toLowerCase();
+            attrs[key] = m[2] ?? m[4] ?? '';
+        }
+        if (!attrs.src) return _match;
+        const image = `![${attrs.alt ?? ''}](${attrs.src})`;
+        return attrs.caption ? `${image}\n*${attrs.caption}*` : image;
+    });
+}
+
 export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) {
     const [selectedId, setSelectedId] = useState<number | null>(notes[0]?.id ?? null);
     const selected = notes.find((n) => n.id === selectedId) ?? null;
@@ -21,11 +40,13 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [projectId, setProjectId] = useState<number | undefined>(undefined);
+    const [previewing, setPreviewing] = useState(false);
 
     useEffect(() => {
         setTitle(selected?.title ?? '');
         setContent(selected?.content ?? '');
         setProjectId(selected?.projectId);
+        setPreviewing(false);
     }, [selectedId]);
 
     async function handleCreate() {
@@ -92,18 +113,31 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </select>
+                            <button
+                                className="icon-btn"
+                                onClick={() => setPreviewing((p) => !p)}
+                                title={previewing ? 'Edit' : 'Preview markdown'}
+                            >
+                                {previewing ? <Pencil size={14} /> : <Eye size={14} />}
+                            </button>
                             <button className="btn btn-danger" onClick={() => {
                                 onDelete(selected.id);
                                 setSelectedId(null);
                             }}>Delete</button>
                         </div>
-                        <textarea
-                            className="input textarea note-content"
-                            value={content}
-                            onChange={(e) => setContent(e.target.value)}
-                            onBlur={() => save()}
-                            placeholder="Write something…"
-                        />
+                        {previewing ? (
+                            <div className="note-content note-preview">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{normalizeMarkdown(content)}</ReactMarkdown>
+                            </div>
+                        ) : (
+                            <textarea
+                                className="input textarea note-content"
+                                value={content}
+                                onChange={(e) => setContent(e.target.value)}
+                                onBlur={() => save()}
+                                placeholder="Write something… (Markdown supported, e.g. ![alt](image-url))"
+                            />
+                        )}
                     </>
                 ) : (
                     <div className="notes-empty-state">
