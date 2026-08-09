@@ -66,7 +66,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          wails build -clean -platform '${{ matrix.platform }}'
+          # webkit2_41 is Linux-only (GTK WebKit). Windows/macOS must not inherit that tag.
+          if [[ '${{ runner.os }}' == 'Linux' ]]; then
+            wails build -clean -platform '${{ matrix.platform }}' -tags webkit2_41
+          else
+            wails build -clean -platform '${{ matrix.platform }}'
+          fi
           mkdir -p dist
           if [[ '${{ runner.os }}' == 'Windows' ]]; then
             cp "build/bin/${{ matrix.binary }}" "dist/${{ matrix.artifact }}.exe"
