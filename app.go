@@ -47,7 +47,7 @@ func now() string {
 // ---------- Projects ----------
 
 func (a *App) ListProjects() ([]Project, error) {
-	rows, err := a.db.Query(`SELECT id, name, color, created_at FROM projects ORDER BY created_at ASC`)
+	rows, err := a.db.Query(`SELECT id, name, color, tags, created_at FROM projects ORDER BY created_at ASC`)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (a *App) ListProjects() ([]Project, error) {
 	projects := []Project{}
 	for rows.Next() {
 		var p Project
-		if err := rows.Scan(&p.ID, &p.Name, &p.Color, &p.CreatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Name, &p.Color, &p.Tags, &p.CreatedAt); err != nil {
 			return nil, err
 		}
 		projects = append(projects, p)
@@ -75,8 +75,8 @@ func (a *App) CreateProject(input ProjectInput) (*Project, error) {
 	createdAt := now()
 
 	res, err := a.db.Exec(
-		`INSERT INTO projects (name, color, created_at) VALUES (?, ?, ?)`,
-		input.Name, color, createdAt,
+		`INSERT INTO projects (name, color, tags, created_at) VALUES (?, ?, ?, ?)`,
+		input.Name, color, input.Tags, createdAt,
 	)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func (a *App) CreateProject(input ProjectInput) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Project{ID: id, Name: input.Name, Color: color, CreatedAt: createdAt}, nil
+	return &Project{ID: id, Name: input.Name, Color: color, Tags: input.Tags, CreatedAt: createdAt}, nil
 }
 
 func (a *App) UpdateProject(input ProjectInput) (*Project, error) {
@@ -93,16 +93,16 @@ func (a *App) UpdateProject(input ProjectInput) (*Project, error) {
 		return nil, fmt.Errorf("project name is required")
 	}
 	_, err := a.db.Exec(
-		`UPDATE projects SET name = ?, color = ? WHERE id = ?`,
-		input.Name, input.Color, input.ID,
+		`UPDATE projects SET name = ?, color = ?, tags = ? WHERE id = ?`,
+		input.Name, input.Color, input.Tags, input.ID,
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	var p Project
-	err = a.db.QueryRow(`SELECT id, name, color, created_at FROM projects WHERE id = ?`, input.ID).
-		Scan(&p.ID, &p.Name, &p.Color, &p.CreatedAt)
+	err = a.db.QueryRow(`SELECT id, name, color, tags, created_at FROM projects WHERE id = ?`, input.ID).
+		Scan(&p.ID, &p.Name, &p.Color, &p.Tags, &p.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -158,6 +158,9 @@ func (a *App) CreateTask(input TaskInput) (*Task, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := a.syncTaskNote(id, input.ProjectID, input.Title, input.Notes); err != nil {
+		return nil, err
+	}
 	return &Task{
 		ID: id, ProjectID: input.ProjectID, Title: input.Title, Notes: input.Notes,
 		Done: false, Priority: input.Priority, DueDate: input.DueDate, SortOrder: sortOrder, CreatedAt: ts, UpdatedAt: ts,
@@ -176,6 +179,9 @@ func (a *App) UpdateTask(input TaskInput) (*Task, error) {
 		input.ProjectID, input.Title, input.Notes, input.Priority, input.DueDate, ts, input.ID,
 	)
 	if err != nil {
+		return nil, err
+	}
+	if err := a.syncTaskNote(input.ID, input.ProjectID, input.Title, input.Notes); err != nil {
 		return nil, err
 	}
 	return a.getTask(input.ID)
@@ -219,6 +225,9 @@ func (a *App) SetTaskProject(id int64, projectId *int64, sortOrder float64) (*Ta
 }
 
 func (a *App) DeleteTask(id int64) error {
+	if _, err := a.db.Exec(`DELETE FROM notes WHERE task_id = ?`, id); err != nil {
+		return err
+	}
 	_, err := a.db.Exec(`DELETE FROM tasks WHERE id = ?`, id)
 	return err
 }
@@ -241,7 +250,7 @@ func (a *App) getTask(id int64) (*Task, error) {
 
 func (a *App) ListNotes() ([]Note, error) {
 	rows, err := a.db.Query(`
-		SELECT id, project_id, title, content, created_at, updated_at
+		SELECT id, project_id, task_id, title, content, created_at, updated_at
 		FROM notes ORDER BY updated_at DESC
 	`)
 	if err != nil {
@@ -252,7 +261,7 @@ func (a *App) ListNotes() ([]Note, error) {
 	notes := []Note{}
 	for rows.Next() {
 		var n Note
-		if err := rows.Scan(&n.ID, &n.ProjectID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt); err != nil {
+		if err := rows.Scan(&n.ID, &n.ProjectID, &n.TaskID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt); err != nil {
 			return nil, err
 		}
 		notes = append(notes, n)
@@ -295,8 +304,8 @@ func (a *App) UpdateNote(input NoteInput) (*Note, error) {
 	}
 
 	var n Note
-	err = a.db.QueryRow(`SELECT id, project_id, title, content, created_at, updated_at FROM notes WHERE id = ?`, input.ID).
-		Scan(&n.ID, &n.ProjectID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
+	err = a.db.QueryRow(`SELECT id, project_id, task_id, title, content, created_at, updated_at FROM notes WHERE id = ?`, input.ID).
+		Scan(&n.ID, &n.ProjectID, &n.TaskID, &n.Title, &n.Content, &n.CreatedAt, &n.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -305,5 +314,33 @@ func (a *App) UpdateNote(input NoteInput) (*Note, error) {
 
 func (a *App) DeleteNote(id int64) error {
 	_, err := a.db.Exec(`DELETE FROM notes WHERE id = ?`, id)
+	return err
+}
+
+// syncTaskNote mirrors a task's notes field into a linked note (identified by task_id) so it
+// also shows up on the Notes page. An empty notes value removes the linked note entirely.
+func (a *App) syncTaskNote(taskID int64, projectID *int64, title, notes string) error {
+	if notes == "" {
+		_, err := a.db.Exec(`DELETE FROM notes WHERE task_id = ?`, taskID)
+		return err
+	}
+
+	ts := now()
+	var existingID int64
+	err := a.db.QueryRow(`SELECT id FROM notes WHERE task_id = ?`, taskID).Scan(&existingID)
+	if err == sql.ErrNoRows {
+		_, err := a.db.Exec(
+			`INSERT INTO notes (project_id, task_id, title, content, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)`,
+			projectID, taskID, title, notes, ts, ts,
+		)
+		return err
+	}
+	if err != nil {
+		return err
+	}
+	_, err = a.db.Exec(
+		`UPDATE notes SET project_id = ?, title = ?, content = ?, updated_at = ? WHERE id = ?`,
+		projectID, title, notes, ts, existingID,
+	)
 	return err
 }

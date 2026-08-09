@@ -1,17 +1,17 @@
 import {useState} from 'react';
 import type {Project, Task, View} from '../types';
 import logo from '../assets/images/kairon-transparent.png';
+import {NewProjectModal} from './NewProjectModal';
 
 type Props = {
     projects: Project[];
     tasks: Task[];
     view: View;
     onSelectView: (view: View) => void;
-    onAddProject: (name: string, color: string) => void;
+    onAddProject: (name: string, color: string, tags: string) => void;
     onDeleteProject: (id: number) => void;
 };
 
-const PROJECT_COLORS = ['#ff8552', '#f5a623', '#4d94ff', '#2ecc71', '#14b8a6', '#ec4899'];
 const COLLAPSED_KEY = 'kairon.sidebarCollapsed';
 
 function isSameView(a: View, b: View): boolean {
@@ -20,30 +20,29 @@ function isSameView(a: View, b: View): boolean {
     return true;
 }
 
+function projectTags(p: Project): string[] {
+    return p.tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+}
+
 export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDeleteProject}: Props) {
     const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSED_KEY) === '1');
-    const [adding, setAdding] = useState(false);
-    const [name, setName] = useState('');
-    const [color, setColor] = useState(PROJECT_COLORS[0]);
+    const [addModalOpen, setAddModalOpen] = useState(false);
+    const [activeTag, setActiveTag] = useState<string | null>(null);
 
     const openTaskCount = tasks.filter((t) => !t.done).length;
+
+    const allTags = [...new Set(projects.flatMap(projectTags))].sort();
+    const visibleProjects = activeTag ? projects.filter((p) => projectTags(p).includes(activeTag)) : projects;
 
     function toggleCollapsed() {
         setCollapsed((prev) => {
             const next = !prev;
             localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0');
-            if (next) setAdding(false);
             return next;
         });
-    }
-
-    function submitProject(e: React.FormEvent) {
-        e.preventDefault();
-        if (!name.trim()) return;
-        onAddProject(name.trim(), color);
-        setName('');
-        setColor(PROJECT_COLORS[Math.floor(Math.random() * PROJECT_COLORS.length)]);
-        setAdding(false);
     }
 
     return (
@@ -85,14 +84,6 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     {!collapsed && 'Calendar'}
                 </button>
                 <button
-                    className={`nav-item ${isSameView(view, {kind: 'all'}) ? 'active' : ''}`}
-                    onClick={() => onSelectView({kind: 'all'})}
-                    title="All Tasks"
-                >
-                    <span className="nav-icon">☰</span>
-                    {!collapsed && 'All Tasks'}
-                </button>
-                <button
                     className={`nav-item ${isSameView(view, {kind: 'notes'}) ? 'active' : ''}`}
                     onClick={() => onSelectView({kind: 'notes'})}
                     title="Notes"
@@ -100,45 +91,43 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     <span className="nav-icon">✎</span>
                     {!collapsed && 'Notes'}
                 </button>
+                <button
+                    className={`nav-item ${isSameView(view, {kind: 'all'}) ? 'active' : ''}`}
+                    onClick={() => onSelectView({kind: 'all'})}
+                    title="All Tasks"
+                >
+                    <span className="nav-icon">☰</span>
+                    {!collapsed && 'All Tasks'}
+                </button>
             </nav>
 
             <div className="sidebar-section">
                 {!collapsed && (
                     <div className="sidebar-section-header">
                         <span>Projects</span>
-                        <button className="icon-btn" onClick={() => setAdding((v) => !v)} title="Add project">
+                        <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add project">
                             +
                         </button>
                     </div>
                 )}
 
-                {adding && !collapsed && (
-                    <form className="add-project-form" onSubmit={submitProject}>
-                        <input
-                            autoFocus
-                            className="input input-sm"
-                            placeholder="Project name"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Escape' && setAdding(false)}
-                        />
-                        <div className="color-swatches">
-                            {PROJECT_COLORS.map((c) => (
-                                <button
-                                    type="button"
-                                    key={c}
-                                    className={`swatch ${color === c ? 'swatch-selected' : ''}`}
-                                    style={{background: c}}
-                                    onClick={() => setColor(c)}
-                                />
-                            ))}
-                        </div>
-                        <button type="submit" className="btn btn-sm">Add</button>
-                    </form>
+                {!collapsed && allTags.length > 0 && (
+                    <div className="tag-filter-row">
+                        {allTags.map((tag) => (
+                            <button
+                                type="button"
+                                key={tag}
+                                className={`tag-chip ${activeTag === tag ? 'tag-chip-active' : ''}`}
+                                onClick={() => setActiveTag((cur) => (cur === tag ? null : tag))}
+                            >
+                                {tag}
+                            </button>
+                        ))}
+                    </div>
                 )}
 
                 <div className="project-list">
-                    {projects.map((p) => (
+                    {visibleProjects.map((p) => (
                         <div
                             key={p.id}
                             className={`nav-item project-item ${
@@ -165,9 +154,21 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                             )}
                         </div>
                     ))}
-                    {projects.length === 0 && !adding && !collapsed && <p className="empty-hint">No projects yet</p>}
+                    {visibleProjects.length === 0 && !collapsed && (
+                        <p className="empty-hint">{activeTag ? `No projects tagged "${activeTag}"` : 'No projects yet'}</p>
+                    )}
                 </div>
             </div>
+
+            {addModalOpen && (
+                <NewProjectModal
+                    onClose={() => setAddModalOpen(false)}
+                    onCreate={(input) => {
+                        onAddProject(input.name, input.color, input.tags);
+                        setAddModalOpen(false);
+                    }}
+                />
+            )}
         </aside>
     );
 }

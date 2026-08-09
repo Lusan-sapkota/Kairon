@@ -280,15 +280,32 @@
     opacity: 1;
 }
 
-.add-project-form {
+.tag-filter-row {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 10px;
-    margin: 4px 0 8px;
-    border-radius: var(--radius);
-    background: rgba(0, 0, 0, 0.25);
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 2px 0 10px;
+}
+
+.tag-chip {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: rgba(255, 255, 255, 0.06);
     border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 4px 10px;
+    cursor: pointer;
+}
+
+.tag-chip:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.tag-chip-active {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent);
 }
 
 .color-swatches {
@@ -393,6 +410,22 @@
     font-size: 12.5px;
 }
 
+select.input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    color-scheme: dark;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23aeb2bf' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 30px;
+}
+
+select.input option {
+    background: var(--bg-solid);
+    color: var(--text);
+}
+
 .btn {
     background: linear-gradient(160deg, #ffa273, var(--accent) 70%);
     color: #26120a;
@@ -476,6 +509,17 @@
     max-width: 1000px;
 }
 
+.task-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.task-view-header .view-title {
+    margin: 0;
+}
+
 .task-group {
     margin-bottom: 20px;
 }
@@ -512,6 +556,31 @@
 
 .task-row:hover .icon-btn.ghost {
     opacity: 1;
+}
+
+.task-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.task-grid .task-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 16px;
+    border-color: var(--border);
+    background: rgba(0, 0, 0, 0.22);
+    border-radius: var(--radius-lg);
+}
+
+.task-grid .task-row .task-main {
+    order: 3;
+    width: 100%;
+}
+
+.task-grid .task-row .icon-btn.ghost {
+    opacity: 1;
+    margin-left: auto;
 }
 
 .checkbox {
@@ -821,14 +890,16 @@
 }
 
 .modal-panel {
-    width: 360px;
+    width: 480px;
+    max-width: 90vw;
     max-height: 85vh;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 24px;
+    gap: 16px;
+    padding: 30px;
     border-radius: var(--radius-lg);
+    font-size: 15px;
     background:
         linear-gradient(155deg, var(--glass-tint-top), var(--glass-tint-bottom) 45%),
         var(--glass-scrim);
@@ -847,7 +918,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 15px;
+    font-size: 18px;
     font-weight: 700;
 }
 
@@ -856,6 +927,19 @@
     justify-content: flex-end;
     gap: 10px;
     margin-top: 4px;
+}
+
+.modal-panel .input {
+    font-size: 14.5px;
+    padding: 11px 14px;
+}
+
+.modal-panel .detail-field-row .input {
+    max-width: 260px;
+}
+
+.modal-panel .textarea {
+    min-height: 110px;
 }
 
 /* ---------- Task detail overlay ---------- */
@@ -1091,20 +1175,22 @@
     position: fixed;
     bottom: 98px;
     right: 40px;
-    width: 260px;
+    width: 380px;
+    max-width: 90vw;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 18px;
+    gap: 14px;
+    padding: 24px;
     border-radius: var(--radius-lg);
     z-index: 15;
+    font-size: 14.5px;
 }
 
 .fab-panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 13px;
+    font-size: 14.5px;
     font-weight: 700;
     color: var(--text-dim);
 }
@@ -1117,14 +1203,23 @@
 }
 
 .fab-panel-row label {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-dim);
     font-weight: 600;
 }
 
 .fab-panel-row .input {
     flex: 1;
-    max-width: 160px;
+    max-width: 240px;
+}
+
+.fab-panel .input {
+    font-size: 14px;
+    padding: 10px 12px;
+}
+
+.fab-panel .textarea {
+    min-height: 90px;
 }
 
 /* ---------- Notes ---------- */
@@ -1210,6 +1305,17 @@
     flex: 1;
     font-size: 16px;
     font-weight: 700;
+}
+
+.note-source-badge {
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
 }
 
 .note-content {

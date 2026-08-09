@@ -3,6 +3,7 @@ export namespace main {
 	export class Note {
 	    id: number;
 	    projectId?: number;
+	    taskId?: number;
 	    title: string;
 	    content: string;
 	    createdAt: string;
@@ -16,6 +17,7 @@ export namespace main {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.id = source["id"];
 	        this.projectId = source["projectId"];
+	        this.taskId = source["taskId"];
 	        this.title = source["title"];
 	        this.content = source["content"];
 	        this.createdAt = source["createdAt"];
@@ -44,6 +46,7 @@ export namespace main {
 	    id: number;
 	    name: string;
 	    color: string;
+	    tags: string;
 	    createdAt: string;
 	
 	    static createFrom(source: any = {}) {
@@ -55,6 +58,7 @@ export namespace main {
 	        this.id = source["id"];
 	        this.name = source["name"];
 	        this.color = source["color"];
+	        this.tags = source["tags"];
 	        this.createdAt = source["createdAt"];
 	    }
 	}
@@ -62,6 +66,7 @@ export namespace main {
 	    id: number;
 	    name: string;
 	    color: string;
+	    tags: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new ProjectInput(source);
@@ -72,6 +77,7 @@ export namespace main {
 	        this.id = source["id"];
 	        this.name = source["name"];
 	        this.color = source["color"];
+	        this.tags = source["tags"];
 	    }
 	}
 	export class Task {

@@ -6,12 +6,13 @@ type Props = {
     projects: Project[];
     initialDueDate?: string;
     initialProjectId?: number;
-    onAdd: (input: {title: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAdd: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
 };
 
 export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, onAdd}: Props) {
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState('');
+    const [notes, setNotes] = useState('');
     const [dueDate, setDueDate] = useState(initialDueDate ?? '');
     const [priority, setPriority] = useState(0);
     const [projectId, setProjectId] = useState<number | undefined>(initialProjectId);
@@ -20,6 +21,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
         setOpen((wasOpen) => {
             if (!wasOpen) {
                 setTitle('');
+                setNotes('');
                 setDueDate(initialDueDate ?? '');
                 setPriority(0);
                 setProjectId(initialProjectId);
@@ -31,8 +33,9 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!title.trim()) return;
-        onAdd({title: title.trim(), dueDate: dueDate || undefined, priority, projectId});
+        onAdd({title: title.trim(), notes: notes.trim() || undefined, dueDate: dueDate || undefined, priority, projectId});
         setTitle('');
+        setNotes('');
         setOpen(false);
     }
 
@@ -91,6 +94,13 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                             ))}
                         </select>
                     </div>
+                    <textarea
+                        className="input textarea"
+                        placeholder="Notes (optional)…"
+                        rows={3}
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                    />
                     <button type="submit" className="btn">
                         Add task
                     </button>

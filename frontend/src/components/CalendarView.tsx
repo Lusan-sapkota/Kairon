@@ -8,7 +8,7 @@ import greetImage from '../assets/images/greet-inverted.png';
 type Props = {
     tasks: Task[];
     projects: Project[];
-    onAddTask: (input: {title: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAddTask: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
     onToggleTask: (id: number) => void;
     onSelectTask: (task: Task) => void;
     onDeleteTask: (id: number) => void;

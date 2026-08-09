@@ -84,9 +84,9 @@ function App() {
         });
     }
 
-    function handleAddProject(name: string, color: string) {
+    function handleAddProject(name: string, color: string, tags: string) {
         withErrorHandling(async () => {
-            await api.createProject(name, color);
+            await api.createProject(name, color, tags);
             setProjects(await api.listProjects());
         });
     }
@@ -158,6 +158,7 @@ function App() {
                 tasks={tasks}
                 projects={projects}
                 groupByProject
+                cardLayout
                 emptyHint="No tasks yet. Add your first one above."
                 onAddTask={handleAddTask}
                 onToggleTask={handleToggleTask}

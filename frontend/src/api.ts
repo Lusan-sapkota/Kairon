@@ -4,10 +4,10 @@ import type {Note, Project, Task} from './types';
 
 export const api = {
     listProjects: (): Promise<Project[]> => Go.ListProjects(),
-    createProject: (name: string, color: string): Promise<Project> =>
-        Go.CreateProject(new main.ProjectInput({name, color})),
-    updateProject: (id: number, name: string, color: string): Promise<Project> =>
-        Go.UpdateProject(new main.ProjectInput({id, name, color})),
+    createProject: (name: string, color: string, tags: string): Promise<Project> =>
+        Go.CreateProject(new main.ProjectInput({name, color, tags})),
+    updateProject: (id: number, name: string, color: string, tags: string): Promise<Project> =>
+        Go.UpdateProject(new main.ProjectInput({id, name, color, tags})),
     deleteProject: (id: number): Promise<void> => Go.DeleteProject(id),
 
     listTasks: (): Promise<Task[]> => Go.ListTasks(),

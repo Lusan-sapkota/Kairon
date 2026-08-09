@@ -9,6 +9,10 @@ type Props = {
     onDelete: (id: number) => void;
 };
 
+function formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'});
+}
+
 export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) {
     const [selectedId, setSelectedId] = useState<number | null>(notes[0]?.id ?? null);
     const selected = notes.find((n) => n.id === selectedId) ?? null;
@@ -49,6 +53,9 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
                             onClick={() => setSelectedId(n.id)}
                         >
                             <span className="note-list-title">{n.title || 'Untitled note'}</span>
+                            {n.taskId && (
+                                <span className="note-source-badge">From task · {formatDate(n.createdAt)}</span>
+                            )}
                             <span className="note-list-preview">{n.content.slice(0, 60)}</span>
                         </div>
                     ))}
@@ -67,6 +74,9 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
                                 onBlur={() => save()}
                                 placeholder="Note title"
                             />
+                            {selected.taskId && (
+                                <span className="note-source-badge">From task · {formatDate(selected.createdAt)}</span>
+                            )}
                             <select
                                 className="input input-sm"
                                 value={projectId ?? ''}

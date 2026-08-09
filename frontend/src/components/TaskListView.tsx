@@ -1,6 +1,8 @@
+import {useState} from 'react';
 import type {Project, Task} from '../types';
 import {TaskComposer} from './TaskComposer';
 import {TaskRow} from './TaskRow';
+import {NewTaskModal} from './NewTaskModal';
 
 type Props = {
     title: string;
@@ -8,8 +10,9 @@ type Props = {
     projects: Project[];
     defaultProjectId?: number;
     groupByProject?: boolean;
+    cardLayout?: boolean;
     emptyHint?: string;
-    onAddTask: (input: {title: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAddTask: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
     onToggleTask: (id: number) => void;
     onSelectTask: (task: Task) => void;
     onDeleteTask: (id: number) => void;
@@ -21,13 +24,16 @@ export function TaskListView({
     projects,
     defaultProjectId,
     groupByProject,
+    cardLayout,
     emptyHint,
     onAddTask,
     onToggleTask,
     onSelectTask,
     onDeleteTask,
 }: Props) {
+    const [addModalOpen, setAddModalOpen] = useState(false);
     const projectById = new Map(projects.map((p) => [p.id, p]));
+    const listClass = cardLayout ? 'task-grid' : 'task-list';
 
     function renderRow(t: Task) {
         return (
@@ -59,20 +65,37 @@ export function TaskListView({
                         <h4 className="task-group-title">
                             {key === 'inbox' ? 'Inbox' : projectById.get(Number(key))?.name ?? 'Inbox'}
                         </h4>
-                        <div className="task-list">{groupTasks.map(renderRow)}</div>
+                        <div className={listClass}>{groupTasks.map(renderRow)}</div>
                     </div>
                 ))}
             </>
         );
     } else {
-        body = <div className="task-list">{tasks.map(renderRow)}</div>;
+        body = <div className={listClass}>{tasks.map(renderRow)}</div>;
     }
 
     return (
         <div className="task-view">
-            <h2 className="view-title">{title}</h2>
+            <div className="task-view-header">
+                <h2 className="view-title">{title}</h2>
+                <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add task">
+                    +
+                </button>
+            </div>
             <TaskComposer projects={projects} defaultProjectId={defaultProjectId} onAdd={onAddTask} />
             {body}
+
+            {addModalOpen && (
+                <NewTaskModal
+                    projects={projects}
+                    initialProjectId={defaultProjectId}
+                    onClose={() => setAddModalOpen(false)}
+                    onCreate={(input) => {
+                        onAddTask(input);
+                        setAddModalOpen(false);
+                    }}
+                />
+            )}
         </div>
     );
 }

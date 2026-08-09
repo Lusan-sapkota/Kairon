@@ -1,10 +1,12 @@
 package main
 
 // Project groups tasks and notes together (e.g. "Work", "Personal").
+// Tags is a comma-separated list (e.g. "work,urgent") used to filter the project list.
 type Project struct {
 	ID        int64  `json:"id"`
 	Name      string `json:"name"`
 	Color     string `json:"color"`
+	Tags      string `json:"tags"`
 	CreatedAt string `json:"createdAt"`
 }
 
@@ -22,10 +24,12 @@ type Task struct {
 	UpdatedAt string  `json:"updatedAt"`
 }
 
-// Note is a freeform note, optionally attached to a project.
+// Note is a freeform note, optionally attached to a project. A note created automatically
+// from a task's notes field carries TaskID, linking it back to that task.
 type Note struct {
 	ID        int64  `json:"id"`
 	ProjectID *int64 `json:"projectId"`
+	TaskID    *int64 `json:"taskId"`
 	Title     string `json:"title"`
 	Content   string `json:"content"`
 	CreatedAt string `json:"createdAt"`
@@ -37,6 +41,7 @@ type ProjectInput struct {
 	ID    int64  `json:"id"`
 	Name  string `json:"name"`
 	Color string `json:"color"`
+	Tags  string `json:"tags"`
 }
 
 // TaskInput is used to create or update a task.
