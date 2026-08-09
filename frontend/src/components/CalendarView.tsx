@@ -1,4 +1,5 @@
 import {useMemo, useState} from 'react';
+import {ChevronLeft, ChevronRight} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {greeting, todayISO} from '../types';
 import {TaskRow} from './TaskRow';
@@ -54,9 +55,9 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
         <div className="calendar-layout">
             <div className="calendar-panel">
                 <div className="calendar-header">
-                    <button className="icon-btn" onClick={() => shiftMonth(-1)}>‹</button>
+                    <button className="icon-btn" onClick={() => shiftMonth(-1)}><ChevronLeft size={16} /></button>
                     <span className="calendar-title">{monthLabel}</span>
-                    <button className="icon-btn" onClick={() => shiftMonth(1)}>›</button>
+                    <button className="icon-btn" onClick={() => shiftMonth(1)}><ChevronRight size={16} /></button>
                 </div>
                 <div className="calendar-grid calendar-weekdays">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (

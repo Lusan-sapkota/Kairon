@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
+import {X, CalendarClock, Flag, FolderKanban, Plus} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
 
@@ -30,7 +31,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                 <div className="modal-header">
                     <span>New task</span>
                     <button type="button" className="icon-btn" onClick={onClose}>
-                        ×
+                        <X size={16} />
                     </button>
                 </div>
 
@@ -43,7 +44,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                 />
 
                 <div className="detail-field-row">
-                    <label>Due date</label>
+                    <label><CalendarClock />Due date</label>
                     <input
                         type="date"
                         className="input input-sm"
@@ -53,7 +54,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                 </div>
 
                 <div className="detail-field-row">
-                    <label>Priority</label>
+                    <label><Flag />Priority</label>
                     <select
                         className="input input-sm"
                         value={priority}
@@ -68,7 +69,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                 </div>
 
                 <div className="detail-field-row">
-                    <label>Category</label>
+                    <label><FolderKanban />Category</label>
                     <select
                         className="input input-sm"
                         value={projectId ?? ''}
@@ -96,7 +97,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                         Cancel
                     </button>
                     <button type="submit" className="btn">
-                        Add task
+                        <Plus size={15} />Add task
                     </button>
                 </div>
             </form>

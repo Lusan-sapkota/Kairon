@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {X, CalendarClock, Flag, FolderKanban, StickyNote} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {PRIORITIES} from '../types';
 
@@ -55,11 +56,11 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                         onChange={(e) => setTitle(e.target.value)}
                         onBlur={() => save()}
                     />
-                    <button className="icon-btn" onClick={onClose}>×</button>
+                    <button className="icon-btn" onClick={onClose}><X size={16} /></button>
                 </div>
 
                 <div className="detail-field-row">
-                    <label>Due date</label>
+                    <label><CalendarClock />Due date</label>
                     <input
                         type="date"
                         className="input input-sm"
@@ -72,7 +73,7 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                 </div>
 
                 <div className="detail-field-row">
-                    <label>Priority</label>
+                    <label><Flag />Priority</label>
                     <select
                         className="input input-sm"
                         value={priority}
@@ -89,7 +90,7 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                 </div>
 
                 <div className="detail-field-row">
-                    <label>Project</label>
+                    <label><FolderKanban />Project</label>
                     <select
                         className="input input-sm"
                         value={projectId ?? ''}
@@ -106,7 +107,7 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                     </select>
                 </div>
 
-                <label className="detail-notes-label">Notes</label>
+                <label className="detail-notes-label"><StickyNote size={14} />Notes</label>
                 <textarea
                     className="input textarea"
                     value={notes}

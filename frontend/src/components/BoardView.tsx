@@ -1,4 +1,6 @@
 import {useEffect, useRef, useState} from 'react';
+import type {CSSProperties} from 'react';
+import {ChevronLeft, ChevronRight, Check, X} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {greeting, priorityColor, todayISO} from '../types';
 import {NewTaskModal} from './NewTaskModal';
@@ -92,7 +94,7 @@ export function BoardView({
                     <h2 className="view-title">{greeting()}, Chief</h2>
                     <div className="board-nav-group">
                         <button className="icon-btn" onClick={() => setDayOffset((o) => o - dayCount)} title="Previous days">
-                            ‹
+                            <ChevronLeft size={16} />
                         </button>
                         {!isCurrentWindow && (
                             <button className="btn-sm btn" onClick={() => setDayOffset(0)}>
@@ -100,7 +102,7 @@ export function BoardView({
                             </button>
                         )}
                         <button className="icon-btn" onClick={() => setDayOffset((o) => o + dayCount)} title="Next days">
-                            ›
+                            <ChevronRight size={16} />
                         </button>
                     </div>
                 </div>
@@ -253,6 +255,7 @@ function BoardColumn({
     return (
         <div
             className={`board-column ${highlighted ? 'board-column-today' : ''} ${columnDragOver ? 'board-column-drag-over' : ''}`}
+            style={accentColor ? ({'--tile-accent': accentColor} as CSSProperties) : undefined}
             onDragOver={(e) => {
                 e.preventDefault();
                 setColumnDragOver(true);
@@ -319,7 +322,7 @@ function BoardColumn({
                                 }}
                                 aria-label="Toggle done"
                             >
-                                {t.done && '✓'}
+                                {t.done && <Check />}
                             </button>
                             <span className="board-task-title">{t.title}</span>
                             {t.priority > 0 && (
@@ -336,7 +339,7 @@ function BoardColumn({
                                     onDelete(t.id);
                                 }}
                             >
-                                ×
+                                <X size={13} />
                             </button>
                         </div>
                     );

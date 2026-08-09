@@ -1,4 +1,5 @@
 import {useMemo, useState} from 'react';
+import {Plus, CircleCheck, SearchX} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {PRIORITIES, isDueToday, isOverdue} from '../types';
 import {TaskRow} from './TaskRow';
@@ -118,7 +119,7 @@ export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelect
     if (visible.length === 0) {
         body = (
             <div className="all-tasks-empty">
-                <span className="all-tasks-empty-icon">{tasks.length === 0 ? '✓' : '⌕'}</span>
+                <span className="all-tasks-empty-icon">{tasks.length === 0 ? <CircleCheck size={22} /> : <SearchX size={22} />}</span>
                 <p className="empty-hint">
                     {tasks.length === 0 ? 'No tasks yet. Add your first one to get started.' : 'No tasks match your filters.'}
                 </p>
@@ -167,7 +168,7 @@ export function AllTasksView({tasks, projects, onAddTask, onToggleTask, onSelect
             <div className="task-view-header">
                 <h2 className="view-title">All Tasks</h2>
                 <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add task">
-                    +
+                    <Plus size={16} />
                 </button>
             </div>
 

@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
+import {X, Plus, Palette} from 'lucide-react';
 
 const PROJECT_COLORS = ['#ff8552', '#f5a623', '#f5484c', '#2ecc71', '#14b8a6', '#4d94ff', '#8b5cf6', '#ec4899'];
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
@@ -37,7 +38,7 @@ export function NewProjectModal({onClose, onCreate}: Props) {
                 <div className="modal-header">
                     <span>New project</span>
                     <button type="button" className="icon-btn" onClick={onClose}>
-                        ×
+                        <X size={16} />
                     </button>
                 </div>
 
@@ -50,7 +51,7 @@ export function NewProjectModal({onClose, onCreate}: Props) {
                 />
 
                 <div className="modal-field">
-                    <label className="modal-field-label">Color</label>
+                    <label className="modal-field-label"><Palette size={13} />Color</label>
                     <div className="color-picker-row">
                         <span className="color-preview" style={{background: color}}>
                             {name.trim().charAt(0).toUpperCase() || '?'}
@@ -96,7 +97,7 @@ export function NewProjectModal({onClose, onCreate}: Props) {
                         Cancel
                     </button>
                     <button type="submit" className="btn">
-                        Add project
+                        <Plus size={15} />Add project
                     </button>
                 </div>
             </form>

@@ -1,3 +1,4 @@
+import {Check, X, CalendarClock} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {isOverdue, priorityColor} from '../types';
 
@@ -22,7 +23,7 @@ export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
                 onClick={() => onToggle(task.id)}
                 aria-label="Toggle done"
             >
-                {task.done && '✓'}
+                {task.done && <Check />}
             </button>
 
             <div className="task-main" onClick={() => onSelect(task)}>
@@ -35,7 +36,7 @@ export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
                     )}
                     {task.dueDate && (
                         <span className={`chip ${isOverdue(task) ? 'chip-overdue' : ''}`}>
-                            {formatDate(task.dueDate)}
+                            <CalendarClock /> {formatDate(task.dueDate)}
                         </span>
                     )}
                     {task.priority > 0 && (
@@ -45,7 +46,7 @@ export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
             </div>
 
             <button className="icon-btn ghost" title="Delete task" onClick={() => onDelete(task.id)}>
-                ×
+                <X size={13} />
             </button>
         </div>
     );

@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {LayoutGrid, CalendarDays, NotebookPen, ListChecks, ChevronsLeft, ChevronsRight, Plus, X} from 'lucide-react';
 import type {Project, Task, View} from '../types';
 import logo from '../assets/images/kairon-transparent.png';
 import {NewProjectModal} from './NewProjectModal';
@@ -57,7 +58,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     onClick={toggleCollapsed}
                     title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
-                    {collapsed ? '»' : '«'}
+                    {collapsed ? <ChevronsRight size={15} /> : <ChevronsLeft size={15} />}
                 </button>
             </div>
 
@@ -67,7 +68,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     onClick={() => onSelectView({kind: 'today'})}
                     title="Board"
                 >
-                    <span className="nav-icon">⊞</span>
+                    <span className="nav-icon"><LayoutGrid size={16} /></span>
                     {!collapsed && (
                         <>
                             Board
@@ -80,7 +81,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     onClick={() => onSelectView({kind: 'upcoming'})}
                     title="Calendar"
                 >
-                    <span className="nav-icon">▤</span>
+                    <span className="nav-icon"><CalendarDays size={16} /></span>
                     {!collapsed && 'Calendar'}
                 </button>
                 <button
@@ -88,7 +89,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     onClick={() => onSelectView({kind: 'notes'})}
                     title="Notes"
                 >
-                    <span className="nav-icon">✎</span>
+                    <span className="nav-icon"><NotebookPen size={16} /></span>
                     {!collapsed && 'Notes'}
                 </button>
                 <button
@@ -96,7 +97,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     onClick={() => onSelectView({kind: 'all'})}
                     title="All Tasks"
                 >
-                    <span className="nav-icon">☰</span>
+                    <span className="nav-icon"><ListChecks size={16} /></span>
                     {!collapsed && 'All Tasks'}
                 </button>
             </nav>
@@ -106,7 +107,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                     <div className="sidebar-section-header">
                         <span>Projects</span>
                         <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add project">
-                            +
+                            <Plus size={14} />
                         </button>
                     </div>
                 )}
@@ -148,7 +149,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onDe
                                             onDeleteProject(p.id);
                                         }}
                                     >
-                                        ×
+                                        <X size={13} />
                                     </button>
                                 </>
                             )}

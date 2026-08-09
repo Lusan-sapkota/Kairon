@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {Plus} from 'lucide-react';
 import type {Project, Task} from '../types';
 import {TaskComposer} from './TaskComposer';
 import {TaskRow} from './TaskRow';
@@ -79,7 +80,7 @@ export function TaskListView({
             <div className="task-view-header">
                 <h2 className="view-title">{title}</h2>
                 <button className="icon-btn" onClick={() => setAddModalOpen(true)} title="Add task">
-                    +
+                    <Plus size={16} />
                 </button>
             </div>
             <TaskComposer projects={projects} defaultProjectId={defaultProjectId} onAdd={onAddTask} />

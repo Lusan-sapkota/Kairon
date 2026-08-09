@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {Plus, X, CalendarClock, Flag, FolderKanban} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
 
@@ -46,7 +47,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                     <div className="fab-panel-header">
                         <span>New task, any date</span>
                         <button type="button" className="icon-btn" onClick={() => setOpen(false)}>
-                            ×
+                            <X size={15} />
                         </button>
                     </div>
                     <input
@@ -57,7 +58,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                         onChange={(e) => setTitle(e.target.value)}
                     />
                     <div className="fab-panel-row">
-                        <label>Due date</label>
+                        <label><CalendarClock />Due date</label>
                         <input
                             type="date"
                             className="input input-sm"
@@ -66,7 +67,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                         />
                     </div>
                     <div className="fab-panel-row">
-                        <label>Priority</label>
+                        <label><Flag />Priority</label>
                         <select
                             className="input input-sm"
                             value={priority}
@@ -80,7 +81,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                         </select>
                     </div>
                     <div className="fab-panel-row">
-                        <label>Category</label>
+                        <label><FolderKanban />Category</label>
                         <select
                             className="input input-sm"
                             value={projectId ?? ''}
@@ -102,12 +103,12 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                         onChange={(e) => setNotes(e.target.value)}
                     />
                     <button type="submit" className="btn">
-                        Add task
+                        <Plus size={15} />Add task
                     </button>
                 </form>
             )}
-            <button className="fab" onClick={toggleOpen} title="Add a task for any date">
-                {open ? '×' : '+'}
+            <button className={`fab ${open ? 'fab-open' : ''}`} onClick={toggleOpen} title="Add a task for any date">
+                <Plus />
             </button>
         </>
     );

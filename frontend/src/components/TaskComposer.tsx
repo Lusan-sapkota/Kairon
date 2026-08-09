@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {Plus} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
 
@@ -36,7 +37,7 @@ export function TaskComposer({projects, defaultProjectId, defaultDueDate, onAdd}
                     onChange={(e) => setTitle(e.target.value)}
                     onFocus={() => setExpanded(true)}
                 />
-                <button type="submit" className="btn">Add</button>
+                <button type="submit" className="btn"><Plus size={15} />Add</button>
             </div>
             {expanded && (
                 <div className="composer-options">

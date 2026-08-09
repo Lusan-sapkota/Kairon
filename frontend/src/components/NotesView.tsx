@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {Plus, NotebookPen} from 'lucide-react';
 import type {Note, Project} from '../types';
 
 type Props = {
@@ -43,7 +44,7 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
             <div className="notes-list-panel">
                 <div className="notes-list-header">
                     <span>Notes</span>
-                    <button className="icon-btn" onClick={handleCreate} title="New note">+</button>
+                    <button className="icon-btn" onClick={handleCreate} title="New note"><Plus size={14} /></button>
                 </div>
                 <div className="notes-list">
                     {notes.map((n) => (
@@ -106,8 +107,9 @@ export function NotesView({notes, projects, onCreate, onSave, onDelete}: Props) 
                     </>
                 ) : (
                     <div className="notes-empty-state">
+                        <NotebookPen size={30} strokeWidth={1.5} />
                         <p>Select a note or create a new one</p>
-                        <button className="btn" onClick={handleCreate}>New note</button>
+                        <button className="btn" onClick={handleCreate}><Plus size={15} />New note</button>
                     </div>
                 )}
             </div>
