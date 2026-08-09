@@ -1,0 +1,52 @@
+import type {Project, Task} from '../types';
+import {isOverdue, priorityColor} from '../types';
+
+type Props = {
+    task: Task;
+    project?: Project;
+    onToggle: (id: number) => void;
+    onSelect: (task: Task) => void;
+    onDelete: (id: number) => void;
+};
+
+function formatDate(iso: string): string {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, {month: 'short', day: 'numeric'});
+}
+
+export function TaskRow({task, project, onToggle, onSelect, onDelete}: Props) {
+    return (
+        <div className={`task-row ${task.done ? 'task-done' : ''}`}>
+            <button
+                className={`checkbox ${task.done ? 'checkbox-checked' : ''}`}
+                onClick={() => onToggle(task.id)}
+                aria-label="Toggle done"
+            >
+                {task.done && '✓'}
+            </button>
+
+            <div className="task-main" onClick={() => onSelect(task)}>
+                <span className="task-title">{task.title}</span>
+                <div className="task-meta">
+                    {project && (
+                        <span className="chip" style={{color: project.color, borderColor: project.color}}>
+                            <span className="dot" style={{background: project.color}} /> {project.name}
+                        </span>
+                    )}
+                    {task.dueDate && (
+                        <span className={`chip ${isOverdue(task) ? 'chip-overdue' : ''}`}>
+                            {formatDate(task.dueDate)}
+                        </span>
+                    )}
+                    {task.priority > 0 && (
+                        <span className="priority-dot" style={{background: priorityColor(task.priority)}} />
+                    )}
+                </div>
+            </div>
+
+            <button className="icon-btn ghost" title="Delete task" onClick={() => onDelete(task.id)}>
+                ×
+            </button>
+        </div>
+    );
+}

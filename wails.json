@@ -1,0 +1,49 @@
+{
+  "name": "myproject",
+  "frontend:build": "npm run build",
+  "frontend:install": "npm install",
+  "frontend:dev": "",
+  "frontend:dev:build": "",
+  "frontend:dev:install": "",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "wailsjsdir": "/home/lusan/Documents/wails-project/myproject/frontend",
+  "version": "2",
+  "projectdir": "/home/lusan/Documents/wails-project/myproject",
+  "build:dir": "build",
+  "build:tags": "webkit2_41",
+  "outputfilename": "myproject",
+  "OutputType": "",
+  "Platform": "",
+  "runNonNativeBuildHooks": false,
+  "postBuildHooks": null,
+  "preBuildHooks": null,
+  "Author": {
+    "name": "Lusan-Sapkota",
+    "email": "sapkotalusan@gmail.com"
+  },
+  "Info": {
+    "companyName": "Kairon",
+    "productName": "Kairon",
+    "productVersion": "1.0.0",
+    "copyright": "Copyright.........",
+    "comments": "Built using Wails (https://wails.io)",
+    "fileAssociations": null,
+    "protocols": null
+  },
+  "debounceMS": 100,
+  "devServer": "localhost:34115",
+  "appargs": "",
+  "nsisType": "multiple",
+  "obfuscated": false,
+  "garbleargs": "",
+  "frontend:dir": "frontend",
+  "viteServerTimeout": 10,
+  "bindings": {
+    "ts_generation": {
+      "prefix": "",
+      "suffix": "",
+      "outputType": ""
+    }
+  }
+}
