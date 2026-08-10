@@ -5,12 +5,12 @@
 <h1 align="center">Kairon</h1>
 
 <p align="center">
-  <strong>v1.0.0</strong>  local-first desktop planner<br />
+  <strong>v1.0.1</strong>  local-first desktop planner<br />
   Tasks · Projects · Calendar · Notes
 </p>
 
 <p align="center">
-  <a href="https://github.com/Lusan-sapkota/Kairon/releases/latest"><img src="https://img.shields.io/badge/release-v1.0.0-ff8552.svg" alt="v1.0.0" /></a>
+  <a href="https://github.com/Lusan-sapkota/Kairon/releases/latest"><img src="https://img.shields.io/badge/release-v1.0.1-ff8552.svg" alt="v1.0.1" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
   <a href="GUIDE.md"><img src="https://img.shields.io/badge/docs-user%20guide-orange.svg" alt="User Guide" /></a>
   <a href="https://wails.io"><img src="https://img.shields.io/badge/built%20with-Wails-red.svg" alt="Wails" /></a>
@@ -83,14 +83,11 @@ Your data stays local in SQLite (see [Data storage](#data-storage)). For clicks,
   </tr>
 </table>
 
-## What’s in v1.0.0
+## What’s in v1.0.1
 
-- **Board**  Monday–Sunday schedule at full width; drag tasks across days or projects; ←/→ moves one day
-- **Calendar**  Month grid with task pills + day agenda and floating quick-add
-- **All tasks**  Search, filters, grouping, sort, side stats, CSV export
-- **Projects**  Color + tags, edit name/color/tags, progress and priority breakdown
-- **Notes**  Markdown edit/preview, project link, autosave on blur
-- **Polish**  Light / dark / system themes, task hover tooltips, confirm-before-delete
+- **Updater** — background checks against GitHub Releases; restart (or open `.deb`) when ready
+- **Design polish** — frosted modals and dialogs in light & dark
+- See [CHANGELOG.md](CHANGELOG.md) for the full history (including v1.0.0)
 
 ## Features (summary)
 

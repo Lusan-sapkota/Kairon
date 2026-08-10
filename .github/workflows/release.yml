@@ -70,11 +70,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          TAG='${{ inputs.tag || github.ref_name }}'
+          VERSION="${TAG#v}"
+          # Keep runtime Version in sync with the release tag (updater compares this).
+          LDFLAGS="-X main.Version=${VERSION}"
           # webkit2_41 is Linux-only (GTK WebKit). Windows/macOS must not inherit that tag.
           if [[ '${{ runner.os }}' == 'Linux' ]]; then
-            wails build -clean -platform '${{ matrix.platform }}' -tags webkit2_41
+            wails build -clean -platform '${{ matrix.platform }}' -tags webkit2_41 -ldflags "${LDFLAGS}"
           else
-            wails build -clean -platform '${{ matrix.platform }}'
+            wails build -clean -platform '${{ matrix.platform }}' -ldflags "${LDFLAGS}"
           fi
           mkdir -p dist
           if [[ '${{ runner.os }}' == 'Windows' ]]; then
@@ -90,9 +94,7 @@ jobs:
           else
             cp "build/bin/${{ matrix.binary }}" "dist/${{ matrix.artifact }}"
             chmod +x "dist/${{ matrix.artifact }}"
-            # Installable .deb for Debian/Ubuntu (pulls GTK + WebKit via apt)
-            TAG='${{ inputs.tag || github.ref_name }}'
-            export VERSION="${TAG#v}"
+            export VERSION
             nfpm package --config packaging/nfpm.yaml --packager deb --target "dist/kairon_${VERSION}_amd64.deb"
           fi
           ls -lah dist
