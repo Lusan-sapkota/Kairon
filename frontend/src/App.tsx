@@ -1,6 +1,8 @@
 import {useCallback, useEffect, useState} from 'react';
 import './App.css';
 import {api} from './api';
+import {EventsOn} from '../wailsjs/runtime/runtime';
+import type {UpdateInfo} from './types';
 import {Sidebar} from './components/Sidebar';
 import {AllTasksView} from './components/AllTasksView';
 import {ProjectView} from './components/ProjectView';
@@ -26,6 +28,7 @@ function App() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [toast, setToast] = useState('');
+    const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
     const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
 
     const refreshAll = useCallback(async () => {
@@ -46,6 +49,35 @@ function App() {
         const timer = window.setTimeout(() => setToast(''), 4000);
         return () => window.clearTimeout(timer);
     }, [toast]);
+
+    useEffect(() => {
+        api.getUpdateInfo()
+            .then((info) => {
+                if (info.state === 'ready') setUpdateInfo(info);
+            })
+            .catch(() => {});
+
+        return EventsOn('update_ready', (info: UpdateInfo) => {
+            setUpdateInfo(info);
+        });
+    }, []);
+
+    const handleDismissUpdate = useCallback(() => {
+        api.dismissUpdate().catch(() => {});
+        setUpdateInfo(null);
+    }, []);
+
+    const handleRestartForUpdate = useCallback(() => {
+        api.applyUpdateAndRestart().catch((err) => {
+            setError(typeof err === 'string' ? err : 'Could not apply update');
+        });
+    }, []);
+
+    const handleOpenUpdatePackage = useCallback(() => {
+        api.openUpdatePackage().catch((err) => {
+            setError(typeof err === 'string' ? err : 'Could not open update package');
+        });
+    }, []);
 
     useEffect(() => {
         let fittedFor = `${window.screen.width}x${window.screen.height}`;
@@ -201,7 +233,7 @@ function App() {
         (note: {id: number; title: string; content: string; projectId?: number}) => {
             withErrorHandling(async () => {
                 await api.updateNote(note);
-                // Notes-only refresh — avoid reloading tasks/projects on every blur autosave.
+                // Notes-only refresh  avoid reloading tasks/projects on every blur autosave.
                 setNotes(await api.listNotes());
             });
         },
@@ -321,6 +353,30 @@ function App() {
                 {toast && (
                     <div className="toast-banner" onClick={() => setToast('')}>
                         {toast}
+                    </div>
+                )}
+                {updateInfo && (
+                    <div className="update-banner">
+                        <div className="update-banner-text">
+                            <strong>Update ready</strong>
+                            <span>
+                                v{updateInfo.currentVersion} → v{updateInfo.version}. {updateInfo.message}
+                            </span>
+                        </div>
+                        <div className="update-banner-actions">
+                            {updateInfo.canAutoApply ? (
+                                <button type="button" className="update-banner-btn primary" onClick={handleRestartForUpdate}>
+                                    Restart now
+                                </button>
+                            ) : (
+                                <button type="button" className="update-banner-btn primary" onClick={handleOpenUpdatePackage}>
+                                    Open installer
+                                </button>
+                            )}
+                            <button type="button" className="update-banner-btn" onClick={handleDismissUpdate}>
+                                Later
+                            </button>
+                        </div>
                     </div>
                 )}
                 {content}

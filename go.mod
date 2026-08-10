@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	github.com/wailsapp/wails/v2 v2.13.0
+	golang.org/x/mod v0.38.0
 	modernc.org/sqlite v1.56.0
 )
 

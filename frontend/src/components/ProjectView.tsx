@@ -117,7 +117,7 @@ export function ProjectView({
                                 <h2 className="project-hero-title">{project.name}</h2>
                                 <p className="project-hero-sub">
                                     {stats.active === 0 && stats.total === 0
-                                        ? 'No tasks yet — add one below'
+                                        ? 'No tasks yet  add one below'
                                         : `${stats.active} active · ${stats.completed} done`}
                                 </p>
                             </div>

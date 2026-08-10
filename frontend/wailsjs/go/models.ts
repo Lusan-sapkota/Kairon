@@ -132,6 +132,40 @@ export namespace main {
 	        this.dueDate = source["dueDate"];
 	    }
 	}
+	export class UpdateInfo {
+	    state: string;
+	    currentVersion: string;
+	    version: string;
+	    installMode: string;
+	    canAutoApply: boolean;
+	    message: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateInfo(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.state = source["state"];
+	        this.currentVersion = source["currentVersion"];
+	        this.version = source["version"];
+	        this.installMode = source["installMode"];
+	        this.canAutoApply = source["canAutoApply"];
+	        this.message = source["message"];
+	    }
+	}
+	export class UpdateSettings {
+	    pollInterval: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new UpdateSettings(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.pollInterval = source["pollInterval"];
+	    }
+	}
 
 }
 

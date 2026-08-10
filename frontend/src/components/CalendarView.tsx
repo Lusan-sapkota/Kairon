@@ -259,7 +259,7 @@ export function CalendarView({tasks, projects, onAddTask, onToggleTask, onSelect
                             <span className="calendar-agenda-empty-icon">
                                 <CircleCheck size={20} />
                             </span>
-                            <p className="empty-hint">Nothing scheduled — add a task for this day.</p>
+                            <p className="empty-hint">Nothing scheduled  add a task for this day.</p>
                         </div>
                     ) : (
                         <div className="task-list calendar-agenda-list">

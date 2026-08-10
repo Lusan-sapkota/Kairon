@@ -129,7 +129,7 @@ export function BoardView({
                         <h2 className="board-hero-title">{greetingText}, Chief</h2>
                         <p className="board-hero-sub">
                             {focusStats.todayOpen === 0
-                                ? 'Clear day ahead — schedule something or clear backlog.'
+                                ? 'Clear day ahead  schedule something or clear backlog.'
                                 : `${focusStats.todayOpen} open today`}
                             {focusStats.overdue > 0 ? ` · ${focusStats.overdue} overdue` : ''}
                         </p>

@@ -1,6 +1,6 @@
 # Kairon User Guide
 
-How to move around Kairon — clicks, double-clicks, drags, hovers, tooltips, keyboard, and view-by-view behavior.
+How to move around Kairon  clicks, double-clicks, drags, hovers, tooltips, keyboard, and view-by-view behavior.
 
 ---
 
@@ -41,8 +41,8 @@ Examples:
 
 Shown on:
 
-- **Board** — hover a task card  
-- **Calendar agenda**, **Project**, **All Tasks** — hover the task title area (`TaskRow`)
+- **Board**  hover a task card  
+- **Calendar agenda**, **Project**, **All Tasks**  hover the task title area (`TaskRow`)
 
 ### Other hover tooltips
 
@@ -234,10 +234,10 @@ Task notes stay linked: content written here is mirrored into a linked note when
 ### New / edit project
 
 - **Name** (required)  
-- **Color** — swatches, native color picker, or hex  
-- **Tags** — comma-separated (e.g. `work, urgent`)  
-- Overlay / **Cancel** — discard  
-- **Add project** / **Save changes** — submit  
+- **Color**  swatches, native color picker, or hex  
+- **Tags**  comma-separated (e.g. `work, urgent`)  
+- Overlay / **Cancel**  discard  
+- **Add project** / **Save changes**  submit  
 
 ### New task
 
@@ -266,7 +266,7 @@ Before deleting a **task**, **project**, or **note**:
 | Board `+ Add task` | **Enter** submits quick add |
 | Modal single-line fields | **Enter** submits the form |
 
-No global command palette — navigation is sidebar + in-view controls.
+No global command palette  navigation is sidebar + in-view controls.
 
 ---
 
@@ -304,7 +304,7 @@ Board greeting art: **inverted** mark in dark mode, **normal** mark in light mod
 
 ## Data location
 
-Everything lives in local SQLite — no sync, no cloud, no accounts:
+Everything lives in local SQLite  no sync, no cloud, no accounts:
 
 | OS | Path |
 | --- | --- |
@@ -322,4 +322,4 @@ Everything lives in local SQLite — no sync, no cloud, no accounts:
 4. **Tag chips** in the sidebar tame a long project list.  
 5. Composer **focus** (not only Enter) unlocks date and priority without opening a modal.  
 6. **Export CSV** from All Tasks for a backup outside SQLite.  
-7. Notes **Preview** for reading; **Edit** while drafting — blur autosaves.
+7. Notes **Preview** for reading; **Edit** while drafting  blur autosaves.

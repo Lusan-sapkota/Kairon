@@ -5,7 +5,7 @@
 <h1 align="center">Kairon</h1>
 
 <p align="center">
-  <strong>v1.0.0</strong> — local-first desktop planner<br />
+  <strong>v1.0.0</strong>  local-first desktop planner<br />
   Tasks · Projects · Calendar · Notes
 </p>
 
@@ -23,7 +23,7 @@
 
 ## Download
 
-Get the app from **[Releases](https://github.com/Lusan-sapkota/Kairon/releases)** — no need to build from source.
+Get the app from **[Releases](https://github.com/Lusan-sapkota/Kairon/releases)**  no need to build from source.
 
 | OS | Asset | How to run |
 |----|--------|------------|
@@ -42,27 +42,27 @@ Your data stays local in SQLite (see [Data storage](#data-storage)). For clicks,
   <tr>
     <td colspan="2" align="center">
       <img src="screenshots/board.png" alt="Board view" width="100%" /><br />
-      <em>Board — week schedule + project columns</em>
+      <em>Board  week schedule + project columns</em>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <img src="screenshots/calendar.png" alt="Calendar view" width="100%" /><br />
-      <em>Calendar — month grid + day agenda</em>
+      <em>Calendar  month grid + day agenda</em>
     </td>
     <td align="center" width="50%">
       <img src="screenshots/projects.png" alt="Project view" width="100%" /><br />
-      <em>Project — full-width tasks + progress</em>
+      <em>Project  full-width tasks + progress</em>
     </td>
   </tr>
   <tr>
     <td align="center" width="50%">
       <img src="screenshots/all-tasks.png" alt="All Tasks view" width="100%" /><br />
-      <em>All Tasks — search, filters, stats</em>
+      <em>All Tasks  search, filters, stats</em>
     </td>
     <td align="center" width="50%">
       <img src="screenshots/notes.png" alt="Notes view" width="100%" /><br />
-      <em>Notes — search, Markdown edit &amp; preview</em>
+      <em>Notes  search, Markdown edit &amp; preview</em>
     </td>
   </tr>
   <tr>
@@ -78,19 +78,19 @@ Your data stays local in SQLite (see [Data storage](#data-storage)). For clicks,
   <tr>
     <td colspan="2" align="center">
       <img src="screenshots/view-details.png" alt="Task detail" width="100%" /><br />
-      <em>Task detail — fields, Markdown notes, save</em>
+      <em>Task detail  fields, Markdown notes, save</em>
     </td>
   </tr>
 </table>
 
 ## What’s in v1.0.0
 
-- **Board** — Monday–Sunday schedule at full width; drag tasks across days or projects; ←/→ moves one day
-- **Calendar** — Month grid with task pills + day agenda and floating quick-add
-- **All tasks** — Search, filters, grouping, sort, side stats, CSV export
-- **Projects** — Color + tags, edit name/color/tags, progress and priority breakdown
-- **Notes** — Markdown edit/preview, project link, autosave on blur
-- **Polish** — Light / dark / system themes, task hover tooltips, confirm-before-delete
+- **Board**  Monday–Sunday schedule at full width; drag tasks across days or projects; ←/→ moves one day
+- **Calendar**  Month grid with task pills + day agenda and floating quick-add
+- **All tasks**  Search, filters, grouping, sort, side stats, CSV export
+- **Projects**  Color + tags, edit name/color/tags, progress and priority breakdown
+- **Notes**  Markdown edit/preview, project link, autosave on blur
+- **Polish**  Light / dark / system themes, task hover tooltips, confirm-before-delete
 
 ## Features (summary)
 
@@ -100,7 +100,7 @@ Your data stays local in SQLite (see [Data storage](#data-storage)). For clicks,
 | Organize | Projects, tags, priorities, due dates |
 | Plan | Week board + month calendar |
 | Write | Markdown notes synced with task notes |
-| Privacy | 100% local SQLite — no accounts, no sync |
+| Privacy | 100% local SQLite  no accounts, no sync |
 
 ## Data storage
 
@@ -118,7 +118,7 @@ Schema migrations run automatically on startup.
 
 | Doc | Purpose |
 | --- | --- |
-| [GUIDE.md](GUIDE.md) | User guide — gestures, views, tooltips, tips |
+| [GUIDE.md](GUIDE.md) | User guide  gestures, views, tooltips, tips |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Dev setup, layout, PR guidelines |
 | [LICENSE](LICENSE) | MIT |
 

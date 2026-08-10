@@ -64,4 +64,13 @@ export const api = {
     exportTasksCSV: (): Promise<string> => Go.ExportTasksCSV(),
 
     refitWindow: (width: number, height: number): Promise<void> => Go.RefitWindow(width, height),
+
+    getVersion: (): Promise<string> => Go.GetVersion(),
+    getUpdateInfo: (): Promise<import('./types').UpdateInfo> => Go.GetUpdateInfo(),
+    getUpdateSettings: (): Promise<import('./types').UpdateSettings> => Go.GetUpdateSettings(),
+    setUpdatePollInterval: (interval: string): Promise<void> => Go.SetUpdatePollInterval(interval),
+    checkForUpdates: (): Promise<void> => Go.CheckForUpdates(),
+    dismissUpdate: (): Promise<void> => Go.DismissUpdate(),
+    openUpdatePackage: (): Promise<void> => Go.OpenUpdatePackage(),
+    applyUpdateAndRestart: (): Promise<void> => Go.ApplyUpdateAndRestart(),
 };

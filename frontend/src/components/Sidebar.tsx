@@ -12,8 +12,11 @@ import {
     Sun,
     Moon,
     MonitorCog,
+    RefreshCw,
 } from 'lucide-react';
 import type {Project, Task, View} from '../types';
+import {UPDATE_POLL_OPTIONS} from '../types';
+import {api} from '../api';
 import logo from '../assets/images/kairon-transparent.png';
 import {NewProjectModal} from './NewProjectModal';
 
@@ -62,6 +65,7 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onUp
     const [themePref, setThemePref] = useState<ThemePref>(
         () => (localStorage.getItem(THEME_KEY) as ThemePref | null) ?? 'system'
     );
+    const [updatePoll, setUpdatePoll] = useState('7d');
 
     const openTaskCount = tasks.filter((t) => !t.done).length;
 
@@ -84,6 +88,12 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onUp
         mq.addEventListener('change', apply);
         return () => mq.removeEventListener('change', apply);
     }, [themePref]);
+
+    useEffect(() => {
+        api.getUpdateSettings()
+            .then((s) => setUpdatePoll(s.pollInterval))
+            .catch(() => {});
+    }, []);
 
     function cycleTheme() {
         setThemePref((prev) => {
@@ -221,8 +231,41 @@ export function Sidebar({projects, tasks, view, onSelectView, onAddProject, onUp
             </div>
 
             <div className="sidebar-footer">
+                <div className="nav-item sidebar-update-row">
+                    <button
+                        type="button"
+                        className="sidebar-update-check"
+                        title="Check for updates now"
+                        onClick={() => api.checkForUpdates().catch(() => {})}
+                    >
+                        <RefreshCw size={16} />
+                    </button>
+                    {!collapsed && (
+                        <select
+                            id="update-poll-select"
+                            className="sidebar-inline-select"
+                            value={updatePoll}
+                            aria-label="Update check frequency"
+                            onChange={(e) => {
+                                const next = e.target.value;
+                                setUpdatePoll(next);
+                                api.setUpdatePollInterval(next).catch(() => {
+                                    api.getUpdateSettings()
+                                        .then((s) => setUpdatePoll(s.pollInterval))
+                                        .catch(() => {});
+                                });
+                            }}
+                        >
+                            {UPDATE_POLL_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                </div>
                 <button
-                    className="nav-item"
+                    className="nav-item sidebar-theme-btn"
                     onClick={cycleTheme}
                     title={`Theme: ${THEME_LABEL[themePref]} (click to change)`}
                 >

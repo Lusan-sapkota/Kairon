@@ -7,7 +7,7 @@ Thanks for your interest in improving Kairon! This is a small, local-first plann
 - **Report a bug**  open an issue with steps to reproduce, what you expected, what happened instead, your OS, and the Kairon version (or commit hash) you're running.
 - **Suggest a feature**  open an issue describing the problem it solves, not just the feature itself. Small, focused additions are easier to review than large ones.
 - **Submit a fix or feature**  open a pull request (see below).
-- **Improve docs** — the README, [GUIDE.md](GUIDE.md), this file, or inline code comments are all fair game.
+- **Improve docs**  the README, [GUIDE.md](GUIDE.md), this file, or inline code comments are all fair game.
 
 ## Prerequisites
 
@@ -15,11 +15,31 @@ Thanks for your interest in improving Kairon! This is a small, local-first plann
 - [Node.js](https://nodejs.org/) 18 or newer (with npm)
 - [Wails CLI](https://wails.io/docs/gettingstarted/installation) v2.13 or newer  `go install github.com/wailsapp/wails/v2/cmd/wails@latest`
 
+**Linux (Ubuntu 22.04+ / Debian 12+):** install GTK + WebKit 4.1 dev packages:
+
+```bash
+sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev
+```
+
+On these distros, Wails must be built with the `webkit2_41` tag (WebKit 4.0 is no longer available).
+
 ## Getting set up
 
 ```bash
 git clone git@github.com:Lusan-sapkota/Kairon.git
 cd Kairon
+```
+
+**Linux:**
+
+```bash
+./scripts/dev-linux.sh
+# or: wails dev -tags webkit2_41
+```
+
+**macOS / Windows:**
+
+```bash
 wails dev
 ```
 

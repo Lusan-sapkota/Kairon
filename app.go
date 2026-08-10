@@ -20,11 +20,13 @@ type App struct {
 	refitGen atomic.Uint64
 	pendingW atomic.Int64
 	pendingH atomic.Int64
+
+	updater *Updater
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	return &App{updater: NewUpdater()}
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -36,13 +38,39 @@ func (a *App) startup(ctx context.Context) {
 		panic(err)
 	}
 	a.db = db
+	a.updater.Start(ctx, db)
 }
 
 // shutdown is called when the app terminates, giving us a chance to close the db.
 func (a *App) shutdown(ctx context.Context) {
+	a.updater.Stop(true)
 	if a.db != nil {
 		a.db.Close()
 	}
+}
+
+func (a *App) GetVersion() string {
+	return Version
+}
+
+func (a *App) GetUpdateInfo() UpdateInfo {
+	return a.updater.GetUpdateInfo()
+}
+
+func (a *App) CheckForUpdates() {
+	a.updater.CheckNow()
+}
+
+func (a *App) DismissUpdate() {
+	a.updater.DismissUpdate()
+}
+
+func (a *App) OpenUpdatePackage() error {
+	return a.updater.OpenUpdatePackage()
+}
+
+func (a *App) ApplyUpdateAndRestart() error {
+	return a.updater.ApplyUpdateAndRestart()
 }
 
 func now() string {

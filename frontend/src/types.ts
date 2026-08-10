@@ -4,6 +4,27 @@ export type Project = main.Project;
 export type Task = main.Task;
 export type Note = main.Note;
 
+export type UpdateInfo = {
+    state: string;
+    currentVersion: string;
+    version: string;
+    installMode: string;
+    canAutoApply: boolean;
+    message: string;
+};
+
+export type UpdateSettings = {
+    pollInterval: string;
+};
+
+export const UPDATE_POLL_OPTIONS = [
+    {value: '24h', label: '24 hours'},
+    {value: '48h', label: '48 hours'},
+    {value: '7d', label: '7 days'},
+    {value: '15d', label: '15 days'},
+    {value: '30d', label: '1 month'},
+] as const;
+
 export type View =
     | {kind: 'today'}
     | {kind: 'upcoming'}
