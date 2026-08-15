@@ -24,6 +24,20 @@ export namespace main {
 	        this.createdAt = source["createdAt"];
 	    }
 	}
+	export class DataLocations {
+	    configDir: string;
+	    database: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new DataLocations(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.configDir = source["configDir"];
+	        this.database = source["database"];
+	    }
+	}
 	export class MailPrefs {
 	    enabled: boolean;
 	    dailyEnabled: boolean;
@@ -302,6 +316,7 @@ export namespace main {
 	    priority: number;
 	    dueDate?: string;
 	    sortOrder: number;
+	    repeat: string;
 	    createdAt: string;
 	    updatedAt: string;
 	
@@ -319,6 +334,7 @@ export namespace main {
 	        this.priority = source["priority"];
 	        this.dueDate = source["dueDate"];
 	        this.sortOrder = source["sortOrder"];
+	        this.repeat = source["repeat"];
 	        this.createdAt = source["createdAt"];
 	        this.updatedAt = source["updatedAt"];
 	    }
@@ -330,6 +346,7 @@ export namespace main {
 	    notes: string;
 	    priority: number;
 	    dueDate?: string;
+	    repeat: string;
 	
 	    static createFrom(source: any = {}) {
 	        return new TaskInput(source);
@@ -343,6 +360,7 @@ export namespace main {
 	        this.notes = source["notes"];
 	        this.priority = source["priority"];
 	        this.dueDate = source["dueDate"];
+	        this.repeat = source["repeat"];
 	    }
 	}
 	export class UpdateInfo {

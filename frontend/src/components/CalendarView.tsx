@@ -9,7 +9,7 @@ import {FloatingQuickAdd} from './FloatingQuickAdd';
 type Props = {
     tasks: Task[];
     projects: Project[];
-    onAddTask: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAddTask: (input: import('../types').TaskDraft) => void;
     onToggleTask: (id: number) => void;
     onSelectTask: (task: Task) => void;
     onDeleteTask: (id: number) => void;

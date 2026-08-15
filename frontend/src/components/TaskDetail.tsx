@@ -1,16 +1,17 @@
 import {useEffect, useState} from 'react';
-import {X, CalendarClock, Flag, FolderKanban, StickyNote, Eye, Pencil, CheckCircle2, Circle} from 'lucide-react';
+import {X, CalendarClock, Flag, FolderKanban, StickyNote, Eye, Pencil, CheckCircle2, Circle, Repeat} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type {Project, Task} from '../types';
-import {PRIORITIES, formatShortDate, isOverdue, priorityLabel} from '../types';
+import {PRIORITIES, formatShortDate, isOverdue, priorityLabel, repeatLabel} from '../types';
 import {normalizeMarkdown, markdownComponents} from '../markdown';
+import {RepeatSelect} from './RepeatSelect';
 
 type Props = {
     task: Task;
     projects: Project[];
     onClose: () => void;
-    onSave: (input: {id: number; title: string; notes: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onSave: (input: {id: number; title: string; notes: string; dueDate?: string; priority: number; projectId?: number; repeat?: string}) => void;
     onDelete: (id: number) => void;
 };
 
@@ -20,6 +21,7 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
     const [dueDate, setDueDate] = useState(task.dueDate ?? '');
     const [priority, setPriority] = useState(task.priority);
     const [projectId, setProjectId] = useState<number | undefined>(task.projectId);
+    const [repeat, setRepeat] = useState(task.repeat ?? '');
     const [previewing, setPreviewing] = useState(!!task.notes);
 
     const project = projects.find((p) => p.id === projectId);
@@ -31,16 +33,18 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
         setDueDate(task.dueDate ?? '');
         setPriority(task.priority);
         setProjectId(task.projectId);
+        setRepeat(task.repeat ?? '');
         setPreviewing(!!task.notes);
     }, [task]);
 
-    function save(overrides: Partial<{title: string; notes: string; dueDate: string; priority: number; projectId?: number}> = {}) {
+    function save(overrides: Partial<{title: string; notes: string; dueDate: string; priority: number; projectId?: number; repeat: string}> = {}) {
         const merged = {
             title,
             notes,
             dueDate,
             priority,
             projectId,
+            repeat,
             ...overrides,
         };
         if (!merged.title.trim()) return;
@@ -51,6 +55,7 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
             dueDate: merged.dueDate || undefined,
             priority: merged.priority,
             projectId: merged.projectId,
+            repeat: merged.repeat || undefined,
         });
     }
 
@@ -83,6 +88,12 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                                             <span className="modal-chip">
                                                 <Flag size={12} />
                                                 {priorityLabel(priority)}
+                                            </span>
+                                        )}
+                                        {repeat && (
+                                            <span className="modal-chip">
+                                                <Repeat size={12} />
+                                                {repeatLabel(repeat)}
                                             </span>
                                         )}
                                     </div>
@@ -153,6 +164,16 @@ export function TaskDetail({task, projects, onClose, onSave, onDelete}: Props) {
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </select>
+                        </div>
+                        <div className="detail-meta-cell">
+                            <span className="detail-meta-label"><Repeat size={13} />Repeat</span>
+                            <RepeatSelect
+                                value={repeat}
+                                onChange={(value) => {
+                                    setRepeat(value);
+                                    save({repeat: value});
+                                }}
+                            />
                         </div>
                     </div>
 

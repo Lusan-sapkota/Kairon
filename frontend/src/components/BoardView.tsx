@@ -1,8 +1,8 @@
 import {memo, useMemo, useRef, useState} from 'react';
 import type {CSSProperties} from 'react';
-import {ChevronLeft, ChevronRight, Check, X} from 'lucide-react';
-import type {Project, Task} from '../types';
-import {formatShortDate, greeting, isOverdue, priorityColor, priorityLabel, taskTooltip, todayISO} from '../types';
+import {ChevronLeft, ChevronRight, Check, X, Repeat} from 'lucide-react';
+import type {Project, Task, TaskDraft} from '../types';
+import {formatShortDate, greeting, isOverdue, priorityColor, priorityLabel, repeatLabel, taskTooltip, todayISO} from '../types';
 import {NewTaskModal} from './NewTaskModal';
 import greetImage from '../assets/images/greet.png';
 import greetImageInverted from '../assets/images/greet-inverted.png';
@@ -10,7 +10,7 @@ import greetImageInverted from '../assets/images/greet-inverted.png';
 type Props = {
     tasks: Task[];
     projects: Project[];
-    onAddTask: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAddTask: (input: TaskDraft) => void;
     onToggleTask: (id: number) => void;
     onSelectTask: (task: Task) => void;
     onDeleteTask: (id: number) => void;
@@ -395,6 +395,11 @@ const BoardColumn = memo(function BoardColumn({
                                             style={{color: priorityColor(t.priority)}}
                                         >
                                             {priorityLabel(t.priority)}
+                                        </span>
+                                    )}
+                                    {t.repeat && (
+                                        <span className="board-task-meta-repeat">
+                                            <Repeat size={11} /> {repeatLabel(t.repeat)}
                                         </span>
                                     )}
                                 </span>

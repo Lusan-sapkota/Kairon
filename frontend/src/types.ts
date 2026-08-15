@@ -4,6 +4,15 @@ export type Project = main.Project;
 export type Task = main.Task;
 export type Note = main.Note;
 
+export type TaskDraft = {
+    title: string;
+    notes?: string;
+    dueDate?: string;
+    priority: number;
+    projectId?: number;
+    repeat?: string;
+};
+
 export type UpdateInfo = {
     state: string;
     currentVersion: string;
@@ -15,6 +24,11 @@ export type UpdateInfo = {
 
 export type UpdateSettings = {
     pollInterval: string;
+};
+
+export type DataLocations = {
+    configDir: string;
+    database: string;
 };
 
 export const UPDATE_POLL_OPTIONS = [
@@ -134,6 +148,17 @@ export const WEEKDAY_OPTIONS = [
     {value: 6, label: 'Saturday'},
 ] as const;
 
+export const REPEAT_OPTIONS = [
+    {value: '', label: 'Does not repeat'},
+    {value: 'daily', label: 'Daily'},
+    {value: 'weekly', label: 'Weekly'},
+    {value: 'monthly', label: 'Monthly'},
+] as const;
+
+export function repeatLabel(repeat?: string): string {
+    return REPEAT_OPTIONS.find((r) => r.value === repeat)?.label ?? 'Does not repeat';
+}
+
 export const PRIORITIES = [
     {value: 0, label: 'None', color: '#5b5f6b'},
     {value: 1, label: 'Low', color: '#4d94ff'},
@@ -185,6 +210,7 @@ export function taskTooltip(task: Task, project?: Project): string {
     const parts: string[] = [];
     if (task.dueDate) parts.push(`Due ${formatTooltipDate(task.dueDate)}${isOverdue(task) ? ' (overdue)' : ''}`);
     if (task.priority > 0) parts.push(`${priorityLabel(task.priority)} priority`);
+    if (task.repeat) parts.push(repeatLabel(task.repeat));
     if (project) parts.push(project.name);
     return parts.length > 0 ? `${task.title}\n${parts.join(' · ')}` : task.title;
 }

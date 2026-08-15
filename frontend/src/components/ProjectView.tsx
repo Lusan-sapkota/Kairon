@@ -11,7 +11,7 @@ type Props = {
     project: Project;
     tasks: Task[];
     projects: Project[];
-    onAddTask: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAddTask: (input: import('../types').TaskDraft) => void;
     onUpdateProject: (id: number, name: string, color: string, tags: string) => void;
     onToggleTask: (id: number) => void;
     onSelectTask: (task: Task) => void;

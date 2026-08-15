@@ -11,13 +11,7 @@ export const api = {
     deleteProject: (id: number): Promise<void> => Go.DeleteProject(id),
 
     listTasks: (): Promise<Task[]> => Go.ListTasks(),
-    createTask: (input: {
-        title: string;
-        notes?: string;
-        priority?: number;
-        dueDate?: string;
-        projectId?: number;
-    }): Promise<Task> =>
+    createTask: (input: import('./types').TaskDraft): Promise<Task> =>
         Go.CreateTask(
             new main.TaskInput({
                 title: input.title,
@@ -25,6 +19,7 @@ export const api = {
                 priority: input.priority ?? 0,
                 dueDate: input.dueDate,
                 projectId: input.projectId,
+                repeat: input.repeat ?? '',
             })
         ),
     updateTask: (task: {
@@ -34,6 +29,7 @@ export const api = {
         priority?: number;
         dueDate?: string;
         projectId?: number;
+        repeat?: string;
     }): Promise<Task> =>
         Go.UpdateTask(
             new main.TaskInput({
@@ -43,6 +39,7 @@ export const api = {
                 priority: task.priority ?? 0,
                 dueDate: task.dueDate,
                 projectId: task.projectId,
+                repeat: task.repeat ?? '',
             })
         ),
     toggleTask: (id: number): Promise<Task> => Go.ToggleTaskDone(id),
@@ -62,6 +59,13 @@ export const api = {
     deleteNote: (id: number): Promise<void> => Go.DeleteNote(id),
 
     exportTasksCSV: (): Promise<string> => Go.ExportTasksCSV(),
+    getDataPath: (): Promise<string> => Go.GetDataPath(),
+    getDataLocations: (): Promise<import('./types').DataLocations> => Go.GetDataLocations(),
+    openLocalPath: (path: string): Promise<void> => Go.OpenLocalPath(path),
+    backupDatabase: (): Promise<string> => Go.BackupDatabase(),
+    restoreDatabase: (): Promise<string> => Go.RestoreDatabase(),
+    wipeLocalData: (scope: 'db' | 'config' | 'both'): Promise<boolean> => Go.WipeLocalData(scope),
+    restartApp: (): Promise<void> => Go.RestartApp(),
 
     refitWindow: (width: number, height: number): Promise<void> => Go.RefitWindow(width, height),
 

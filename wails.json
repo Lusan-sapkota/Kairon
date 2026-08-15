@@ -25,7 +25,7 @@
   "Info": {
     "companyName": "Lusan Sapkota",
     "productName": "Kairon",
-    "productVersion": "1.0.1",
+    "productVersion": "1.1.0",
     "copyright": "Copyright © 2026 Lusan Sapkota",
     "comments": "A simple planner app for tasks, projects, calendar, and notes. Built using Wails (https://wails.io)",
     "fileAssociations": null,

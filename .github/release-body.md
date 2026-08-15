@@ -1,11 +1,17 @@
-Local-first desktop planner for **tasks, projects, calendar, and notes**.  
+Local-first desktop planner for **tasks, projects, calendar, and notes**.
 Built with [Wails](https://wails.io) (Go) + React + TypeScript. Data stays in SQLite on your machine — no accounts, no network.
 
-## What’s new in this release
+Made by [Lusan Sapkota](https://lusansapkota.com.np).
 
-- **In-app updater** — checks GitHub Releases in the background, downloads the right asset for your install, and prompts you to restart (or open the `.deb` installer on Linux)
-- **Update check frequency** — choose 24 hours, 48 hours, 7 days, 15 days, or 1 month in the sidebar
-- **Design polish** — clearer frosted modals and dialogs in light and dark themes
+## What’s new
+
+- **Guide** — Settings → Guide has the full handbook (also [GUIDE.md](https://github.com/Lusan-sapkota/Kairon/blob/main/GUIDE.md))
+- **Notifications** — in-app inbox, History page, optional desktop toasts
+- **Email reports** — SMTP + queued daily / weekly / due digests
+- **Backup & restore** — copy or replace `planner.db` from Settings → Data
+- **Location & wipe** — config folder and database paths (Copy / Open); wipe database, config, or both, then restart
+- **Recurring tasks** — daily / weekly / monthly on complete
+- **Command palette** — Ctrl/Cmd+K to capture or jump
 
 Full notes: [CHANGELOG.md](https://github.com/Lusan-sapkota/Kairon/blob/main/CHANGELOG.md)
 
@@ -25,12 +31,18 @@ Linux builds need **GTK3** and **WebKitGTK 4.1** (`libgtk-3-0`, `libwebkit2gtk-4
 - **Board** — week schedule, project columns, drag-and-drop
 - **Calendar** — month grid + day agenda
 - **Projects** — full-width task lists, progress, edit project details
-- **All Tasks** — search, filters, stats
+- **All Tasks** — search, filters, stats, CSV export
 - **Notes** — Markdown edit & preview
-- Hover tooltips, ghost edit/delete actions, local SQLite storage
+- **Command palette** — Ctrl/Cmd+K (jump / capture), Ctrl/Cmd+N (new task)
+- **Repeat** — daily / weekly / monthly tasks
+- **Notifications** — in-app + optional desktop; History archive
+- **Email** — SMTP reports and reminders with an offline queue
+- **Data** — backup / restore / wipe, local SQLite only
+- **Updates** — GitHub Releases checker in Settings
+- Hover tooltips, ghost edit/delete actions, light / dark / system theme
 
 ## Docs
 
 - Changelog: [CHANGELOG.md](https://github.com/Lusan-sapkota/Kairon/blob/main/CHANGELOG.md)
-- User guide: [GUIDE.md](https://github.com/Lusan-sapkota/Kairon/blob/main/GUIDE.md)
-- Screenshots & overview: [README](https://github.com/Lusan-sapkota/Kairon#readme)
+- User guide: [GUIDE.md](https://github.com/Lusan-sapkota/Kairon/blob/main/GUIDE.md) (also in the app: **Settings → Guide**)
+- Overview: [README](https://github.com/Lusan-sapkota/Kairon#readme)

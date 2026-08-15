@@ -1,14 +1,15 @@
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
-import {Plus, X, CalendarClock, Flag, FolderKanban} from 'lucide-react';
+import {Plus, X, CalendarClock, Flag, FolderKanban, Repeat} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
+import {RepeatSelect} from './RepeatSelect';
 
 type Props = {
     projects: Project[];
     initialDueDate?: string;
     initialProjectId?: number;
-    onAdd: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAdd: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number; repeat?: string}) => void;
 };
 
 export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, onAdd}: Props) {
@@ -18,6 +19,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
     const [dueDate, setDueDate] = useState(initialDueDate ?? '');
     const [priority, setPriority] = useState(0);
     const [projectId, setProjectId] = useState<number | undefined>(initialProjectId);
+    const [repeat, setRepeat] = useState('');
 
     function toggleOpen() {
         setOpen((wasOpen) => {
@@ -27,6 +29,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                 setDueDate(initialDueDate ?? '');
                 setPriority(0);
                 setProjectId(initialProjectId);
+                setRepeat('');
             }
             return !wasOpen;
         });
@@ -35,7 +38,7 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!title.trim()) return;
-        onAdd({title: title.trim(), notes: notes.trim() || undefined, dueDate: dueDate || undefined, priority, projectId});
+        onAdd({title: title.trim(), notes: notes.trim() || undefined, dueDate: dueDate || undefined, priority, projectId, repeat: repeat || undefined});
         setTitle('');
         setNotes('');
         setOpen(false);
@@ -105,6 +108,11 @@ export function FloatingQuickAdd({projects, initialDueDate, initialProjectId, on
                                         </option>
                                     ))}
                                 </select>
+                            </div>
+
+                            <div className="detail-field-row">
+                                <label><Repeat />Repeat</label>
+                                <RepeatSelect value={repeat} onChange={setRepeat} />
                             </div>
 
                             <textarea

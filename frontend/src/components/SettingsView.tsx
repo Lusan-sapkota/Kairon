@@ -1,8 +1,12 @@
 import {useCallback, useEffect, useState, type ReactNode} from 'react';
 import {
     Bell,
+    BookOpen,
     CalendarClock,
     Check,
+    Copy,
+    Database,
+    FolderOpen,
     Inbox,
     Mail,
     Monitor,
@@ -11,11 +15,15 @@ import {
     Settings as SettingsIcon,
     Trash2,
 } from 'lucide-react';
+import {BrowserOpenURL, ClipboardSetText, EventsOn} from '../../wailsjs/runtime/runtime';
 import {api} from '../api';
+import {GuidePanel} from './GuidePanel';
+import {ConfirmDialog, RestartRequiredDialog} from './ConfirmDialog';
 import {
     QUEUE_TTL_OPTIONS,
     UPDATE_POLL_OPTIONS,
     WEEKDAY_OPTIONS,
+    type DataLocations,
     type MailPrefs,
     type MailQueueItem,
     type MailQueueStats,
@@ -24,7 +32,30 @@ import {
     type UpdateInfo,
 } from '../types';
 
-type Section = 'updates' | 'notify' | 'email' | 'queue';
+type Section = 'guide' | 'updates' | 'notify' | 'email' | 'queue' | 'data';
+
+type WipeScope = 'db' | 'config' | 'both';
+
+const WIPE_COPY: Record<WipeScope, {title: string; message: string; confirmLabel: string}> = {
+    db: {
+        title: 'Wipe database?',
+        message:
+            'This deletes planner.db: tasks, notes, projects, settings, and mail. Downloaded updates in the config folder stay. Kairon must restart afterwards. Make a backup first if you might want any of it back.',
+        confirmLabel: 'Wipe database',
+    },
+    config: {
+        title: 'Wipe config folder?',
+        message:
+            'This deletes downloaded updates and other files beside the database. Your tasks and notes in planner.db stay. Kairon must restart afterwards.',
+        confirmLabel: 'Wipe config',
+    },
+    both: {
+        title: 'Wipe config and database?',
+        message:
+            "This deletes Kairon's config folder and database on this machine, including settings, mail, and downloaded updates. Kairon must restart afterwards. It cannot be undone. Make a backup first if you might want any of it back.",
+        confirmLabel: 'Wipe both',
+    },
+};
 
 function emptySMTP(): SMTPConfig {
     return {
@@ -164,6 +195,43 @@ function Chip({
     );
 }
 
+function LocationRow({
+    label,
+    path,
+    copied,
+    onCopy,
+    onOpen,
+}: {
+    label: string;
+    path: string;
+    copied: boolean;
+    onCopy: () => void;
+    onOpen: () => void;
+}) {
+    return (
+        <div className="settings-location">
+            <span className="settings-label">{label}</span>
+            <div className="settings-path-row">
+                <p className="settings-path" title={path}>
+                    {path}
+                </p>
+                <button
+                    type="button"
+                    className={`settings-location-action ${copied ? 'copied' : ''}`}
+                    onClick={onCopy}
+                >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? 'Copied' : 'Copy'}
+                </button>
+                <button type="button" className="settings-location-action" onClick={onOpen}>
+                    <FolderOpen size={14} />
+                    Open
+                </button>
+            </div>
+        </div>
+    );
+}
+
 function ScheduleRows({
     disabled,
     dailyLabel,
@@ -228,14 +296,26 @@ type Props = {
 };
 
 const NAV: {id: Section; label: string; icon: typeof Bell}[] = [
+    {id: 'guide', label: 'Guide', icon: BookOpen},
     {id: 'updates', label: 'Updates', icon: RefreshCw},
     {id: 'notify', label: 'Notifications', icon: Bell},
     {id: 'email', label: 'Email', icon: Mail},
     {id: 'queue', label: 'Mail queue', icon: Inbox},
+    {id: 'data', label: 'Data', icon: Database},
 ];
 
+const GITHUB_URL = 'https://github.com/Lusan-sapkota/Kairon';
+
+function GitHubMark({size = 16}: {size?: number}) {
+    return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+            <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-.99-.02-1.94-3.2.7-3.87-1.54-3.87-1.54-.53-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.47.11-3.06 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.64 1.59.24 2.77.12 3.06.74.8 1.18 1.83 1.18 3.08 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14 0 1.54-.01 2.78-.01 3.16 0 .3.21.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z" />
+        </svg>
+    );
+}
+
 export function SettingsView({updateInfo}: Props) {
-    const [section, setSection] = useState<Section>('updates');
+    const [section, setSection] = useState<Section>('guide');
     const [version, setVersion] = useState('');
     const [poll, setPoll] = useState('7d');
     const [smtp, setSMTP] = useState<SMTPConfig>(emptySMTP());
@@ -247,6 +327,10 @@ export function SettingsView({updateInfo}: Props) {
     const [busy, setBusy] = useState('');
     const [note, setNote] = useState('');
     const [error, setError] = useState('');
+    const [locations, setLocations] = useState<DataLocations | null>(null);
+    const [dataConfirm, setDataConfirm] = useState<'restore' | WipeScope | null>(null);
+    const [restartRequired, setRestartRequired] = useState(false);
+    const [copiedPath, setCopiedPath] = useState<'config' | 'db' | null>(null);
 
     const loadMail = useCallback(async () => {
         const [mail, items, st] = await Promise.all([api.getMailSettings(), api.listMailQueue(), api.getMailQueueStats()]);
@@ -268,7 +352,43 @@ export function SettingsView({updateInfo}: Props) {
         api.desktopNotificationsAvailable()
             .then(setDesktopAvailable)
             .catch(() => {});
+        api.getDataLocations()
+            .then(setLocations)
+            .catch(() => {});
+        const unsub = EventsOn('data_reload', () => {
+            loadMail().catch(() => {});
+            api.getNotifyPrefs()
+                .then(setNotifyPrefs)
+                .catch(() => {});
+            api.getDataLocations()
+                .then(setLocations)
+                .catch(() => {});
+        });
+        return () => unsub();
     }, [loadMail]);
+
+    useEffect(() => {
+        if (!copiedPath) return;
+        const t = window.setTimeout(() => setCopiedPath(null), 1800);
+        return () => window.clearTimeout(t);
+    }, [copiedPath]);
+
+    async function copyLocation(kind: 'config' | 'db', path: string) {
+        try {
+            await ClipboardSetText(path);
+            setCopiedPath(kind);
+        } catch {
+            setError('Could not copy path');
+        }
+    }
+
+    async function openLocation(path: string) {
+        try {
+            await api.openLocalPath(path);
+        } catch {
+            setError('Could not open that folder');
+        }
+    }
 
     async function withBusy(label: string, fn: () => Promise<void>) {
         setBusy(label);
@@ -312,23 +432,37 @@ export function SettingsView({updateInfo}: Props) {
 
             <div className="settings-shell">
                 <nav className="settings-rail" aria-label="Settings sections">
-                    {NAV.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                            <button
-                                type="button"
-                                key={item.id}
-                                className={`settings-rail-item ${section === item.id ? 'active' : ''}`}
-                                onClick={() => setSection(item.id)}
-                            >
-                                <Icon size={16} />
-                                {item.label}
-                            </button>
-                        );
-                    })}
+                    <div className="settings-rail-items">
+                        {NAV.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <button
+                                    type="button"
+                                    key={item.id}
+                                    className={`settings-rail-item ${section === item.id ? 'active' : ''}`}
+                                    onClick={() => setSection(item.id)}
+                                >
+                                    <Icon size={16} />
+                                    {item.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                    <div className="settings-rail-foot">
+                        <button
+                            type="button"
+                            className="settings-rail-github"
+                            onClick={() => BrowserOpenURL(GITHUB_URL)}
+                        >
+                            <GitHubMark size={16} />
+                            GitHub
+                        </button>
+                    </div>
                 </nav>
 
                 <div className="settings-panel">
+                    {section === 'guide' && <GuidePanel />}
+
                     {section === 'updates' && (
                         <section className="settings-card">
                             <div className="settings-card-head">
@@ -860,8 +994,139 @@ export function SettingsView({updateInfo}: Props) {
                             )}
                         </section>
                     )}
+
+                    {section === 'data' && (
+                        <section className="settings-card settings-data-card">
+                            <div className="settings-card-head">
+                                <span className="settings-card-icon">
+                                    <Database size={16} />
+                                </span>
+                                <div>
+                                    <h3>Data</h3>
+                                    <p>Local files on this machine. Wipe asks twice, then restart.</p>
+                                </div>
+                            </div>
+                            {locations && (
+                                <div className="settings-locations">
+                                    <LocationRow
+                                        label="Config folder"
+                                        path={locations.configDir}
+                                        copied={copiedPath === 'config'}
+                                        onCopy={() => copyLocation('config', locations.configDir)}
+                                        onOpen={() => openLocation(locations.configDir)}
+                                    />
+                                    <LocationRow
+                                        label="Database"
+                                        path={locations.database}
+                                        copied={copiedPath === 'db'}
+                                        onCopy={() => copyLocation('db', locations.database)}
+                                        onOpen={() => openLocation(locations.database)}
+                                    />
+                                </div>
+                            )}
+                            <div className="settings-data-groups">
+                                <div>
+                                    <p className="settings-label">Backup</p>
+                                    <div className="settings-actions">
+                                        <button
+                                            type="button"
+                                            className="btn"
+                                            disabled={!!busy}
+                                            onClick={() =>
+                                                withBusy('backup', async () => {
+                                                    const path = await api.backupDatabase();
+                                                    if (path) setNote(`Backup saved to ${path}`);
+                                                })
+                                            }
+                                        >
+                                            Backup now
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-ghost"
+                                            disabled={!!busy}
+                                            onClick={() => setDataConfirm('restore')}
+                                        >
+                                            Restore…
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <p className="settings-label">Wipe</p>
+                                    <div className="settings-actions">
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger"
+                                            disabled={!!busy || restartRequired}
+                                            onClick={() => setDataConfirm('db')}
+                                        >
+                                            <Trash2 size={15} />
+                                            Database
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger"
+                                            disabled={!!busy || restartRequired}
+                                            onClick={() => setDataConfirm('config')}
+                                        >
+                                            <Trash2 size={15} />
+                                            Config
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn btn-danger btn-danger-solid"
+                                            disabled={!!busy || restartRequired}
+                                            onClick={() => setDataConfirm('both')}
+                                        >
+                                            <Trash2 size={15} />
+                                            Both
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    )}
                 </div>
             </div>
+
+            {dataConfirm === 'restore' && (
+                <ConfirmDialog
+                    title="Restore from backup?"
+                    message="You will pick a .db file next. That file replaces every task, note, project, setting, and mail queue on this machine. Kairon asks once more before it writes."
+                    confirmLabel="Choose backup"
+                    onCancel={() => setDataConfirm(null)}
+                    onConfirm={() => {
+                        setDataConfirm(null);
+                        withBusy('restore', async () => {
+                            const path = await api.restoreDatabase();
+                            if (path) setNote('Data restored from backup');
+                        });
+                    }}
+                />
+            )}
+            {dataConfirm && dataConfirm !== 'restore' && (
+                <ConfirmDialog
+                    title={WIPE_COPY[dataConfirm].title}
+                    message={WIPE_COPY[dataConfirm].message}
+                    confirmLabel={WIPE_COPY[dataConfirm].confirmLabel}
+                    onCancel={() => setDataConfirm(null)}
+                    onConfirm={() => {
+                        const scope = dataConfirm;
+                        setDataConfirm(null);
+                        withBusy('wipe', async () => {
+                            const wiped = await api.wipeLocalData(scope);
+                            if (wiped) setRestartRequired(true);
+                        });
+                    }}
+                />
+            )}
+            {restartRequired && (
+                <RestartRequiredDialog
+                    onRestart={() => {
+                        api.restartApp().catch(() => setError('Could not restart. Quit Kairon from the menu, then open it again.'));
+                    }}
+                />
+            )}
         </div>
     );
 }

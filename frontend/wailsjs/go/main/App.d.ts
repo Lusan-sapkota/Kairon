@@ -4,6 +4,8 @@ import {main} from '../models';
 
 export function ApplyUpdateAndRestart():Promise<void>;
 
+export function BackupDatabase():Promise<string>;
+
 export function CheckForUpdates():Promise<void>;
 
 export function ClearNotifications():Promise<void>;
@@ -27,6 +29,10 @@ export function DesktopNotificationsAvailable():Promise<boolean>;
 export function DismissUpdate():Promise<void>;
 
 export function ExportTasksCSV():Promise<string>;
+
+export function GetDataLocations():Promise<main.DataLocations>;
+
+export function GetDataPath():Promise<string>;
 
 export function GetMailQueueStats():Promise<main.MailQueueStats>;
 
@@ -54,11 +60,17 @@ export function MarkAllNotificationsRead():Promise<void>;
 
 export function MarkNotificationRead(arg1:number):Promise<void>;
 
+export function OpenLocalPath(arg1:string):Promise<void>;
+
 export function OpenUpdatePackage():Promise<void>;
 
 export function PurgeMailQueue():Promise<void>;
 
 export function RefitWindow(arg1:number,arg2:number):Promise<void>;
+
+export function RestartApp():Promise<void>;
+
+export function RestoreDatabase():Promise<string>;
 
 export function RetryAllMail():Promise<void>;
 
@@ -93,3 +105,7 @@ export function UpdateNote(arg1:main.NoteInput):Promise<main.Note>;
 export function UpdateProject(arg1:main.ProjectInput):Promise<main.Project>;
 
 export function UpdateTask(arg1:main.TaskInput):Promise<main.Task>;
+
+export function WipeDatabase():Promise<boolean>;
+
+export function WipeLocalData(arg1:string):Promise<boolean>;

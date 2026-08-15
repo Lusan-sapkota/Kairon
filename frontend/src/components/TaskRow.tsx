@@ -1,7 +1,7 @@
 import {memo} from 'react';
-import {Check, X, CalendarClock} from 'lucide-react';
+import {Check, X, CalendarClock, Repeat} from 'lucide-react';
 import type {Project, Task} from '../types';
-import {formatShortDate, isOverdue, priorityColor, taskTooltip} from '../types';
+import {formatShortDate, isOverdue, priorityColor, repeatLabel, taskTooltip} from '../types';
 
 type Props = {
     task: Task;
@@ -33,6 +33,11 @@ export const TaskRow = memo(function TaskRow({task, project, onToggle, onSelect,
                     {task.dueDate && (
                         <span className={`chip ${isOverdue(task) ? 'chip-overdue' : ''}`}>
                             <CalendarClock /> {formatShortDate(task.dueDate)}
+                        </span>
+                    )}
+                    {task.repeat && (
+                        <span className="chip">
+                            <Repeat size={11} /> {repeatLabel(task.repeat)}
                         </span>
                     )}
                     {task.priority > 0 && (

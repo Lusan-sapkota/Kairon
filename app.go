@@ -14,8 +14,9 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
-	db  *sql.DB
+	ctx    context.Context
+	db     *sql.DB
+	dbPath string
 
 	refitGen atomic.Uint64
 	pendingW atomic.Int64
@@ -39,6 +40,7 @@ func (a *App) startup(ctx context.Context) {
 		panic(err)
 	}
 	a.db = db
+	a.dbPath, _ = plannerDBPath()
 	_ = runtime.InitializeNotifications(ctx)
 	runtime.OnNotificationResponse(ctx, func(result runtime.NotificationResult) {
 		runtime.WindowUnminimise(ctx)
@@ -233,7 +235,7 @@ func (a *App) DeleteProject(id int64) error {
 
 func (a *App) ListTasks() ([]Task, error) {
 	rows, err := a.db.Query(`
-		SELECT id, project_id, title, notes, done, priority, due_date, sort_order, created_at, updated_at
+		SELECT id, project_id, title, notes, done, priority, due_date, sort_order, repeat, created_at, updated_at
 		FROM tasks ORDER BY done ASC, due_date IS NULL, due_date ASC, priority DESC, created_at ASC
 	`)
 	if err != nil {
@@ -245,7 +247,7 @@ func (a *App) ListTasks() ([]Task, error) {
 	for rows.Next() {
 		var t Task
 		var done int
-		if err := rows.Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.SortOrder, &t.CreatedAt, &t.UpdatedAt); err != nil {
+		if err := rows.Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.SortOrder, &t.Repeat, &t.CreatedAt, &t.UpdatedAt); err != nil {
 			return nil, err
 		}
 		t.Done = done != 0
@@ -258,13 +260,14 @@ func (a *App) CreateTask(input TaskInput) (*Task, error) {
 	if input.Title == "" {
 		return nil, fmt.Errorf("task title is required")
 	}
+	repeat := normalizeRepeat(input.Repeat)
 	ts := now()
 	sortOrder := float64(time.Now().UnixNano())
 
 	res, err := a.db.Exec(
-		`INSERT INTO tasks (project_id, title, notes, done, priority, due_date, sort_order, created_at, updated_at)
-		 VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)`,
-		input.ProjectID, input.Title, input.Notes, input.Priority, input.DueDate, sortOrder, ts, ts,
+		`INSERT INTO tasks (project_id, title, notes, done, priority, due_date, sort_order, repeat, created_at, updated_at)
+		 VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
+		input.ProjectID, input.Title, input.Notes, input.Priority, input.DueDate, sortOrder, repeat, ts, ts,
 	)
 	if err != nil {
 		return nil, err
@@ -278,7 +281,7 @@ func (a *App) CreateTask(input TaskInput) (*Task, error) {
 	}
 	return &Task{
 		ID: id, ProjectID: input.ProjectID, Title: input.Title, Notes: input.Notes,
-		Done: false, Priority: input.Priority, DueDate: input.DueDate, SortOrder: sortOrder, CreatedAt: ts, UpdatedAt: ts,
+		Done: false, Priority: input.Priority, DueDate: input.DueDate, SortOrder: sortOrder, Repeat: repeat, CreatedAt: ts, UpdatedAt: ts,
 	}, nil
 }
 
@@ -286,12 +289,13 @@ func (a *App) UpdateTask(input TaskInput) (*Task, error) {
 	if input.Title == "" {
 		return nil, fmt.Errorf("task title is required")
 	}
+	repeat := normalizeRepeat(input.Repeat)
 	ts := now()
 
 	_, err := a.db.Exec(
-		`UPDATE tasks SET project_id = ?, title = ?, notes = ?, priority = ?, due_date = ?, updated_at = ?
+		`UPDATE tasks SET project_id = ?, title = ?, notes = ?, priority = ?, due_date = ?, repeat = ?, updated_at = ?
 		 WHERE id = ?`,
-		input.ProjectID, input.Title, input.Notes, input.Priority, input.DueDate, ts, input.ID,
+		input.ProjectID, input.Title, input.Notes, input.Priority, input.DueDate, repeat, ts, input.ID,
 	)
 	if err != nil {
 		return nil, err
@@ -303,14 +307,25 @@ func (a *App) UpdateTask(input TaskInput) (*Task, error) {
 }
 
 func (a *App) ToggleTaskDone(id int64) (*Task, error) {
-	_, err := a.db.Exec(
+	before, err := a.getTask(id)
+	if err != nil {
+		return nil, err
+	}
+	_, err = a.db.Exec(
 		`UPDATE tasks SET done = 1 - done, updated_at = ? WHERE id = ?`,
 		now(), id,
 	)
 	if err != nil {
 		return nil, err
 	}
-	return a.getTask(id)
+	t, err := a.getTask(id)
+	if err != nil {
+		return nil, err
+	}
+	if !before.Done && t.Done {
+		a.spawnNextRepeat(*t)
+	}
+	return t, nil
 }
 
 // SetTaskDueDate moves a task to a new due date and board position, leaving its project untouched.
@@ -349,9 +364,9 @@ func (a *App) getTask(id int64) (*Task, error) {
 	var t Task
 	var done int
 	err := a.db.QueryRow(`
-		SELECT id, project_id, title, notes, done, priority, due_date, sort_order, created_at, updated_at
+		SELECT id, project_id, title, notes, done, priority, due_date, sort_order, repeat, created_at, updated_at
 		FROM tasks WHERE id = ?
-	`, id).Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.SortOrder, &t.CreatedAt, &t.UpdatedAt)
+	`, id).Scan(&t.ID, &t.ProjectID, &t.Title, &t.Notes, &done, &t.Priority, &t.DueDate, &t.SortOrder, &t.Repeat, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +376,7 @@ func (a *App) getTask(id int64) (*Task, error) {
 
 func (a *App) ExportTasksCSV() (string, error) {
 	rows, err := a.db.Query(`
-		SELECT t.title, t.notes, t.done, t.priority, t.due_date, p.name, t.created_at, t.updated_at
+		SELECT t.title, t.notes, t.done, t.priority, t.due_date, t.repeat, p.name, t.created_at, t.updated_at
 		FROM tasks t
 		LEFT JOIN projects p ON p.id = t.project_id
 		ORDER BY t.created_at ASC
@@ -372,7 +387,7 @@ func (a *App) ExportTasksCSV() (string, error) {
 	defer rows.Close()
 
 	type taskRecord struct {
-		title, notes         string
+		title, notes, repeat string
 		done                 int
 		priority             int
 		dueDate, project     sql.NullString
@@ -381,7 +396,7 @@ func (a *App) ExportTasksCSV() (string, error) {
 	var records []taskRecord
 	for rows.Next() {
 		var r taskRecord
-		if err := rows.Scan(&r.title, &r.notes, &r.done, &r.priority, &r.dueDate, &r.project, &r.createdAt, &r.updatedAt); err != nil {
+		if err := rows.Scan(&r.title, &r.notes, &r.done, &r.priority, &r.dueDate, &r.repeat, &r.project, &r.createdAt, &r.updatedAt); err != nil {
 			return "", err
 		}
 		records = append(records, r)
@@ -408,7 +423,7 @@ func (a *App) ExportTasksCSV() (string, error) {
 	defer f.Close()
 
 	w := csv.NewWriter(f)
-	if err := w.Write([]string{"Title", "Notes", "Done", "Priority", "Due Date", "Project", "Created At", "Updated At"}); err != nil {
+	if err := w.Write([]string{"Title", "Notes", "Done", "Priority", "Due Date", "Repeat", "Project", "Created At", "Updated At"}); err != nil {
 		return "", err
 	}
 
@@ -419,7 +434,7 @@ func (a *App) ExportTasksCSV() (string, error) {
 			done = "Yes"
 		}
 		if err := w.Write([]string{
-			r.title, r.notes, done, priorityLabels[r.priority], r.dueDate.String, r.project.String, r.createdAt, r.updatedAt,
+			r.title, r.notes, done, priorityLabels[r.priority], r.dueDate.String, r.repeat, r.project.String, r.createdAt, r.updatedAt,
 		}); err != nil {
 			return "", err
 		}

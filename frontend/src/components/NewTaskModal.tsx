@@ -1,15 +1,16 @@
 import {useState} from 'react';
 import {createPortal} from 'react-dom';
-import {X, CalendarClock, Flag, FolderKanban, Plus, ListTodo} from 'lucide-react';
+import {X, CalendarClock, Flag, FolderKanban, Plus, ListTodo, Repeat} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
+import {RepeatSelect} from './RepeatSelect';
 
 type Props = {
     projects: Project[];
     initialDueDate?: string;
     initialProjectId?: number;
     onClose: () => void;
-    onCreate: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onCreate: (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number; repeat?: string}) => void;
 };
 
 export function NewTaskModal({projects, initialDueDate, initialProjectId, onClose, onCreate}: Props) {
@@ -18,6 +19,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
     const [dueDate, setDueDate] = useState(initialDueDate ?? '');
     const [priority, setPriority] = useState(0);
     const [projectId, setProjectId] = useState<number | undefined>(initialProjectId);
+    const [repeat, setRepeat] = useState('');
 
     const project = projects.find((p) => p.id === projectId);
     const accent = project?.color ?? '#ff8552';
@@ -25,7 +27,7 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!title.trim()) return;
-        onCreate({title: title.trim(), notes, dueDate: dueDate || undefined, priority, projectId});
+        onCreate({title: title.trim(), notes, dueDate: dueDate || undefined, priority, projectId, repeat: repeat || undefined});
     }
 
     return createPortal(
@@ -101,6 +103,10 @@ export function NewTaskModal({projects, initialDueDate, initialProjectId, onClos
                                     <option key={p.id} value={p.id}>{p.name}</option>
                                 ))}
                             </select>
+                        </div>
+                        <div className="detail-meta-cell">
+                            <span className="detail-meta-label"><Repeat size={13} />Repeat</span>
+                            <RepeatSelect value={repeat} onChange={setRepeat} />
                         </div>
                     </div>
 

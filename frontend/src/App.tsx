@@ -13,8 +13,10 @@ import {TaskDetail} from './components/TaskDetail';
 import {SettingsView} from './components/SettingsView';
 import {HistoryView} from './components/HistoryView';
 import {NotificationPanel} from './components/NotificationPanel';
+import {CommandPalette} from './components/CommandPalette';
+import {NewTaskModal} from './components/NewTaskModal';
 import {ConfirmDialog} from './components/ConfirmDialog';
-import type {Note, Project, Task, View} from './types';
+import type {Note, Project, Task, TaskDraft, View} from './types';
 
 type PendingConfirm = {
     title: string;
@@ -36,6 +38,8 @@ function App() {
     const [notifyOpen, setNotifyOpen] = useState(false);
     const [notifications, setNotifications] = useState<AppNotification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [commandOpen, setCommandOpen] = useState(false);
+    const [quickTaskOpen, setQuickTaskOpen] = useState(false);
 
     const refreshAll = useCallback(async () => {
         const [p, t, n] = await Promise.all([api.listProjects(), api.listTasks(), api.listNotes()]);
@@ -82,6 +86,15 @@ function App() {
             if (item.title) setToast(item.title);
         });
     }, [refreshNotifications]);
+
+    useEffect(() => {
+        return EventsOn('data_reload', (kind: string) => {
+            refreshAll()
+                .then(() => refreshNotifications())
+                .then(() => setToast(kind === 'wiped' ? 'Config and database wiped' : 'Backup restored'))
+                .catch((err) => setError(String(err)));
+        });
+    }, [refreshAll, refreshNotifications]);
 
     const handleDismissUpdate = useCallback(() => {
         api.dismissUpdate().catch(() => {});
@@ -131,7 +144,7 @@ function App() {
     }, []);
 
     const handleAddTask = useCallback(
-        (input: {title: string; notes?: string; dueDate?: string; priority: number; projectId?: number}) => {
+        (input: TaskDraft) => {
             withErrorHandling(async () => {
                 await api.createTask(input);
                 setTasks(await api.listTasks());
@@ -172,7 +185,7 @@ function App() {
     }, []);
 
     const handleSaveTask = useCallback(
-        (input: {id: number; title: string; notes: string; dueDate?: string; priority: number; projectId?: number}) => {
+        (input: {id: number; title: string; notes: string; dueDate?: string; priority: number; projectId?: number; repeat?: string}) => {
             withErrorHandling(async () => {
                 await api.updateTask(input);
                 setTasks(await api.listTasks());
@@ -276,6 +289,30 @@ function App() {
         },
         [notes, withErrorHandling]
     );
+
+    useEffect(() => {
+        function onKey(e: KeyboardEvent) {
+            if (e.key === 'Escape' && commandOpen) {
+                e.preventDefault();
+                setCommandOpen(false);
+                return;
+            }
+            const mod = e.metaKey || e.ctrlKey;
+            if (!mod) return;
+            const key = e.key.toLowerCase();
+            if (key === 'k') {
+                e.preventDefault();
+                setQuickTaskOpen(false);
+                setCommandOpen((open) => !open);
+            } else if (key === 'n') {
+                e.preventDefault();
+                setCommandOpen(false);
+                setQuickTaskOpen(true);
+            }
+        }
+        window.addEventListener('keydown', onKey);
+        return () => window.removeEventListener('keydown', onKey);
+    }, [commandOpen]);
 
     const handleExportTasks = useCallback(() => {
         withErrorHandling(async () => {
@@ -473,6 +510,33 @@ function App() {
                             .catch(() => {});
                     }}
                     onOpenHistory={() => setView({kind: 'history'})}
+                />
+            )}
+
+            <CommandPalette
+                open={commandOpen}
+                projects={projects}
+                tasks={tasks}
+                notes={notes}
+                onClose={() => setCommandOpen(false)}
+                onNewTask={() => setQuickTaskOpen(true)}
+                onQuickAdd={(title) => handleAddTask({title, priority: 0})}
+                onNewNote={() => {
+                    setView({kind: 'notes'});
+                    handleCreateNote().catch(() => {});
+                }}
+                onSelectView={setView}
+                onSelectTask={handleSelectTask}
+            />
+
+            {quickTaskOpen && (
+                <NewTaskModal
+                    projects={projects}
+                    onClose={() => setQuickTaskOpen(false)}
+                    onCreate={(input) => {
+                        handleAddTask(input);
+                        setQuickTaskOpen(false);
+                    }}
                 />
             )}
 

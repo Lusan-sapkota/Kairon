@@ -20,6 +20,7 @@ type Task struct {
 	Priority  int     `json:"priority"` // 0 none, 1 low, 2 medium, 3 high
 	DueDate   *string `json:"dueDate"`  // "YYYY-MM-DD"
 	SortOrder float64 `json:"sortOrder"`
+	Repeat    string  `json:"repeat"` // "", "daily", "weekly", "monthly"
 	CreatedAt string  `json:"createdAt"`
 	UpdatedAt string  `json:"updatedAt"`
 }
@@ -52,6 +53,7 @@ type TaskInput struct {
 	Notes     string  `json:"notes"`
 	Priority  int     `json:"priority"`
 	DueDate   *string `json:"dueDate"`
+	Repeat    string  `json:"repeat"`
 }
 
 // NoteInput is used to create or update a note.
@@ -60,4 +62,10 @@ type NoteInput struct {
 	ProjectID *int64 `json:"projectId"`
 	Title     string `json:"title"`
 	Content   string `json:"content"`
+}
+
+// DataLocations is the on-disk config folder and SQLite file Kairon uses on this machine.
+type DataLocations struct {
+	ConfigDir string `json:"configDir"`
+	Database  string `json:"database"`
 }

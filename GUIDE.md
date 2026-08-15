@@ -13,11 +13,24 @@ How to move around Kairon  clicks, double-clicks, drags, hovers, tooltips, keybo
 | **Drag & drop** | Move a task to another day or project (**Board** only) |
 | **Hover** | Show tooltips · reveal ghost edit/delete buttons |
 | **Enter** | Submit composers / modals |
+| **Ctrl+K** / **⌘K** | Command palette (add task, jump, search) |
+| **Ctrl+N** / **⌘N** | New task modal |
 | **Focus** (composer input) | Expand date / priority / project options |
 | **Blur** | Autosave notes / task detail fields |
 | **Click outside overlay** | Close modal or task detail |
 
 Deletes always ask for confirmation first.
+
+---
+
+## Command palette
+
+**Ctrl+K** (⌘K on macOS) opens a jump bar.
+
+- Type a task title and press **Enter** to capture it.
+- Arrow keys to Board, Calendar, Notes, History, Settings, projects, matching tasks/notes.
+- Empty palette: **New task** or **New note**.
+- **Ctrl+N** / **⌘N** opens the full new-task modal from anywhere.
 
 ---
 
@@ -87,7 +100,7 @@ These stay hidden until you hover the parent row:
 | Click **+** next to Projects | New project modal |
 | Hover project → **pencil** | Edit name, color, tags |
 | Hover project → **X** | Delete project (confirm). Tasks in that project move to **Inbox** (no project) |
-| Click **Settings** | Open updates, app notifications, SMTP, and the mail queue |
+| Click **Settings** | Open the Guide, updates, notifications, SMTP, mail queue, backup, and location |
 | Click **History** | Full alert history (search, filter, delete) |
 | Click **Notifications** | Open the in-app notification inbox
 | Click **collapse / expand** | Narrow icon rail or full sidebar (remembered) |
@@ -152,6 +165,8 @@ Today’s column is highlighted. Each column header shows an **open-task count**
 | Drop on **empty column area** | Append to the end |
 
 Order uses fractional indexing so neighbors don’t all reshuffle.
+
+Completing a task with a **Repeat** of daily / weekly / monthly keeps the done copy and opens the next occurrence (due date moves forward, skipping through overdue days until it’s in the future).
 
 ---
 
@@ -271,10 +286,12 @@ Same fields as new task; FAB title: “Add a task for any date”. Opening reset
 
 ### Confirm dialogs
 
-Before deleting a **task**, **project**, or **note**:
+Before deleting a **task**, **project**, or **note**, or before **restore** / **wipe** in Settings:
 
 - **Cancel** / overlay → abort  
-- **Delete** → proceed  
+- **Delete** / **Choose backup** / **Wipe…** → proceed  
+- Restore and wipe also show a system dialog after that.  
+- After a wipe, only **Restart now** is available. 
 
 ---
 
@@ -286,7 +303,7 @@ Before deleting a **task**, **project**, or **note**:
 | Board `+ Add task` | **Enter** submits quick add |
 | Modal single-line fields | **Enter** submits the form |
 
-No global command palette  navigation is sidebar + in-view controls.
+No global shortcuts besides **Ctrl+K** / **⌘K** (command palette) and **Ctrl+N** / **⌘N** (new task). Everything else is sidebar + in-view controls.
 
 ---
 
@@ -324,7 +341,13 @@ Board greeting art: **inverted** mark in dark mode, **normal** mark in light mod
 
 ## Settings
 
-Open **Settings** from the sidebar (below History). Sections live in a left rail: **Updates**, **Notifications**, **Email**, **Mail queue**.
+Open **Settings** from the sidebar (below History). Sections live in a left rail: **Guide**, **Updates**, **Notifications**, **Email**, **Mail queue**, **Data**.
+
+### Guide
+
+The full platform handbook — gestures, every view, shortcuts, mail, backups, wipe. Same content as `GUIDE.md` in the repo. Jump chips at the top skip to a section.
+
+Click a heading chip, or scroll. External links (for example Gmail app passwords) open in your browser.
 
 ### Updates
 
@@ -365,11 +388,31 @@ Use **Send daily/weekly/reminder now** to queue without waiting for the clock.
 
 Shows pending, failed, expired, and sent items. **Retry** one row or **Retry all**. **Clear history** drops sent/failed/expired (pending stay).
 
+### Data
+
+One card: paths on top, **Backup** and **Wipe** side by side underneath.
+
+Shows the **config folder** and the **database** path. Each row has **Copy** and **Open**.
+
+| Control | Result |
+| --- | --- |
+| **Copy** | Copies that path. The button reads **Copied** for a couple of seconds |
+| **Open** | Reveals the folder (or the database file’s folder) in the file manager |
+| **Backup now** | Writes a copy of `planner.db` wherever you choose |
+| **Restore…** | Asks here, you pick a `.db`, then a system dialog asks once more. That file replaces tasks, notes, settings, and mail |
+| **Database** (wipe) | Deletes `planner.db` (tasks, notes, settings, mail). Downloaded updates stay |
+| **Config** (wipe) | Deletes downloaded updates and other files beside the database. Tasks stay |
+| **Both** (wipe) | Deletes the whole Kairon folder on this machine |
+
+Each wipe asks in the app, then again in a system dialog. Afterwards a **Restart now** dialog is the only option — this window cannot keep running.
+
+The Settings rail footer **GitHub** opens the public repository.
+
 ---
 
 ## Data location
 
-Everything lives in local SQLite  no sync, no cloud, no accounts:
+Everything lives under a local config folder  no sync, no cloud, no accounts. The SQLite file is `planner.db` inside that folder. Settings → Data shows the exact paths.
 
 | OS | Path |
 | --- | --- |
@@ -387,4 +430,22 @@ Everything lives in local SQLite  no sync, no cloud, no accounts:
 4. **Tag chips** in the sidebar tame a long project list.  
 5. Composer **focus** (not only Enter) unlocks date and priority without opening a modal.  
 6. **Export CSV** from All Tasks for a backup outside SQLite.  
-7. Notes **Preview** for reading; **Edit** while drafting  blur autosaves.
+7. Notes **Preview** for reading; **Edit** while drafting  blur autosaves.  
+8. **Backup now** in Settings before a wipe; Copy the path if you need it outside Kairon.
+
+---
+
+## Vision
+
+Planning should feel like sitting down at your own desk — not logging into someone else’s cloud.
+
+Kairon is a quiet place for that work: tasks, projects, a calendar, and notes in one window, with the database on your machine. No account. No feed. No product that needs the network just so you can remember what you owed yourself this week.
+
+The aim is small and stubborn. Capture quickly, see the week clearly, finish what matters, and leave the rest of the internet at the door.
+
+---
+
+## About
+
+Kairon is an independent app by [Lusan Sapkota](https://lusansapkota.com.np). The source is on GitHub; your tasks and notes stay on this computer.
+

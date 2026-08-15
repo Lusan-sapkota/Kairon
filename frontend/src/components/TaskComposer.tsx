@@ -2,12 +2,13 @@ import {useEffect, useState} from 'react';
 import {Plus} from 'lucide-react';
 import type {Project} from '../types';
 import {PRIORITIES} from '../types';
+import {RepeatSelect} from './RepeatSelect';
 
 type Props = {
     projects: Project[];
     defaultProjectId?: number;
     defaultDueDate?: string;
-    onAdd: (input: {title: string; dueDate?: string; priority: number; projectId?: number}) => void;
+    onAdd: (input: {title: string; dueDate?: string; priority: number; projectId?: number; repeat?: string}) => void;
 };
 
 export function TaskComposer({projects, defaultProjectId, defaultDueDate, onAdd}: Props) {
@@ -15,6 +16,7 @@ export function TaskComposer({projects, defaultProjectId, defaultDueDate, onAdd}
     const [dueDate, setDueDate] = useState(defaultDueDate ?? '');
     const [priority, setPriority] = useState(0);
     const [projectId, setProjectId] = useState<number | undefined>(defaultProjectId);
+    const [repeat, setRepeat] = useState('');
     const [expanded, setExpanded] = useState(false);
 
     useEffect(() => {
@@ -28,9 +30,10 @@ export function TaskComposer({projects, defaultProjectId, defaultDueDate, onAdd}
     function submit(e: React.FormEvent) {
         e.preventDefault();
         if (!title.trim()) return;
-        onAdd({title: title.trim(), dueDate: dueDate || undefined, priority, projectId});
+        onAdd({title: title.trim(), dueDate: dueDate || undefined, priority, projectId, repeat: repeat || undefined});
         setTitle('');
         setPriority(0);
+        setRepeat('');
         setExpanded(false);
         if (!defaultDueDate) setDueDate('');
         else setDueDate(defaultDueDate);
@@ -79,6 +82,7 @@ export function TaskComposer({projects, defaultProjectId, defaultDueDate, onAdd}
                             </option>
                         ))}
                     </select>
+                    <RepeatSelect value={repeat} onChange={setRepeat} />
                 </div>
             )}
         </form>

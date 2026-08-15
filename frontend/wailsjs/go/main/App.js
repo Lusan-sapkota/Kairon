@@ -6,6 +6,10 @@ export function ApplyUpdateAndRestart() {
   return window['go']['main']['App']['ApplyUpdateAndRestart']();
 }
 
+export function BackupDatabase() {
+  return window['go']['main']['App']['BackupDatabase']();
+}
+
 export function CheckForUpdates() {
   return window['go']['main']['App']['CheckForUpdates']();
 }
@@ -52,6 +56,14 @@ export function DismissUpdate() {
 
 export function ExportTasksCSV() {
   return window['go']['main']['App']['ExportTasksCSV']();
+}
+
+export function GetDataLocations() {
+  return window['go']['main']['App']['GetDataLocations']();
+}
+
+export function GetDataPath() {
+  return window['go']['main']['App']['GetDataPath']();
 }
 
 export function GetMailQueueStats() {
@@ -106,6 +118,10 @@ export function MarkNotificationRead(arg1) {
   return window['go']['main']['App']['MarkNotificationRead'](arg1);
 }
 
+export function OpenLocalPath(arg1) {
+  return window['go']['main']['App']['OpenLocalPath'](arg1);
+}
+
 export function OpenUpdatePackage() {
   return window['go']['main']['App']['OpenUpdatePackage']();
 }
@@ -116,6 +132,14 @@ export function PurgeMailQueue() {
 
 export function RefitWindow(arg1, arg2) {
   return window['go']['main']['App']['RefitWindow'](arg1, arg2);
+}
+
+export function RestartApp() {
+  return window['go']['main']['App']['RestartApp']();
+}
+
+export function RestoreDatabase() {
+  return window['go']['main']['App']['RestoreDatabase']();
 }
 
 export function RetryAllMail() {
@@ -184,4 +208,12 @@ export function UpdateProject(arg1) {
 
 export function UpdateTask(arg1) {
   return window['go']['main']['App']['UpdateTask'](arg1);
+}
+
+export function WipeDatabase() {
+  return window['go']['main']['App']['WipeDatabase']();
+}
+
+export function WipeLocalData(arg1) {
+  return window['go']['main']['App']['WipeLocalData'](arg1);
 }

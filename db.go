@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS tasks (
 	due_date   TEXT,
 	sort_order REAL NOT NULL DEFAULT 0,
 	created_at TEXT NOT NULL,
-	updated_at TEXT NOT NULL
+	updated_at TEXT NOT NULL,
+	repeat     TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS notes (
@@ -80,18 +81,31 @@ CREATE TABLE IF NOT EXISTS notifications (
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications (read, created_at);
 `
 
-func openDB() (*sql.DB, error) {
+func plannerAppDir() (string, error) {
 	configDir, err := os.UserConfigDir()
 	if err != nil {
-		return nil, fmt.Errorf("could not resolve config dir: %w", err)
+		return "", fmt.Errorf("could not resolve config dir: %w", err)
 	}
+	return filepath.Join(configDir, "planner"), nil
+}
 
-	appDir := filepath.Join(configDir, "planner")
+func plannerDBPath() (string, error) {
+	appDir, err := plannerAppDir()
+	if err != nil {
+		return "", err
+	}
 	if err := os.MkdirAll(appDir, 0o755); err != nil {
-		return nil, fmt.Errorf("could not create app dir: %w", err)
+		return "", fmt.Errorf("could not create app dir: %w", err)
+	}
+	return filepath.Join(appDir, "planner.db"), nil
+}
+
+func openDB() (*sql.DB, error) {
+	dbPath, err := plannerDBPath()
+	if err != nil {
+		return nil, err
 	}
 
-	dbPath := filepath.Join(appDir, "planner.db")
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("could not open database: %w", err)
@@ -174,6 +188,9 @@ func migrate(db *sql.DB) error {
 	if err := ensureNotifications(db); err != nil {
 		return err
 	}
+	if err := ensureTaskRepeat(db); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -230,5 +247,17 @@ func ensureNotifications(db *sql.DB) error {
 		);
 		CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications (read, created_at);
 	`)
+	return err
+}
+
+func ensureTaskRepeat(db *sql.DB) error {
+	hasRepeat, err := hasColumn(db, "tasks", "repeat")
+	if err != nil {
+		return err
+	}
+	if hasRepeat {
+		return nil
+	}
+	_, err = db.Exec(`ALTER TABLE tasks ADD COLUMN repeat TEXT NOT NULL DEFAULT ''`)
 	return err
 }
