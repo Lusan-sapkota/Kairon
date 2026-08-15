@@ -10,6 +10,10 @@ export function CheckForUpdates() {
   return window['go']['main']['App']['CheckForUpdates']();
 }
 
+export function ClearNotifications() {
+  return window['go']['main']['App']['ClearNotifications']();
+}
+
 export function CreateNote(arg1) {
   return window['go']['main']['App']['CreateNote'](arg1);
 }
@@ -26,6 +30,10 @@ export function DeleteNote(arg1) {
   return window['go']['main']['App']['DeleteNote'](arg1);
 }
 
+export function DeleteNotification(arg1) {
+  return window['go']['main']['App']['DeleteNotification'](arg1);
+}
+
 export function DeleteProject(arg1) {
   return window['go']['main']['App']['DeleteProject'](arg1);
 }
@@ -34,12 +42,28 @@ export function DeleteTask(arg1) {
   return window['go']['main']['App']['DeleteTask'](arg1);
 }
 
+export function DesktopNotificationsAvailable() {
+  return window['go']['main']['App']['DesktopNotificationsAvailable']();
+}
+
 export function DismissUpdate() {
   return window['go']['main']['App']['DismissUpdate']();
 }
 
 export function ExportTasksCSV() {
   return window['go']['main']['App']['ExportTasksCSV']();
+}
+
+export function GetMailQueueStats() {
+  return window['go']['main']['App']['GetMailQueueStats']();
+}
+
+export function GetMailSettings() {
+  return window['go']['main']['App']['GetMailSettings']();
+}
+
+export function GetNotifyPrefs() {
+  return window['go']['main']['App']['GetNotifyPrefs']();
 }
 
 export function GetUpdateInfo() {
@@ -54,8 +78,16 @@ export function GetVersion() {
   return window['go']['main']['App']['GetVersion']();
 }
 
+export function ListMailQueue() {
+  return window['go']['main']['App']['ListMailQueue']();
+}
+
 export function ListNotes() {
   return window['go']['main']['App']['ListNotes']();
+}
+
+export function ListNotifications() {
+  return window['go']['main']['App']['ListNotifications']();
 }
 
 export function ListProjects() {
@@ -66,12 +98,52 @@ export function ListTasks() {
   return window['go']['main']['App']['ListTasks']();
 }
 
+export function MarkAllNotificationsRead() {
+  return window['go']['main']['App']['MarkAllNotificationsRead']();
+}
+
+export function MarkNotificationRead(arg1) {
+  return window['go']['main']['App']['MarkNotificationRead'](arg1);
+}
+
 export function OpenUpdatePackage() {
   return window['go']['main']['App']['OpenUpdatePackage']();
 }
 
+export function PurgeMailQueue() {
+  return window['go']['main']['App']['PurgeMailQueue']();
+}
+
 export function RefitWindow(arg1, arg2) {
   return window['go']['main']['App']['RefitWindow'](arg1, arg2);
+}
+
+export function RetryAllMail() {
+  return window['go']['main']['App']['RetryAllMail']();
+}
+
+export function RetryMailItem(arg1) {
+  return window['go']['main']['App']['RetryMailItem'](arg1);
+}
+
+export function SaveMailPrefs(arg1) {
+  return window['go']['main']['App']['SaveMailPrefs'](arg1);
+}
+
+export function SaveNotifyPrefs(arg1) {
+  return window['go']['main']['App']['SaveNotifyPrefs'](arg1);
+}
+
+export function SaveSMTPConfig(arg1) {
+  return window['go']['main']['App']['SaveSMTPConfig'](arg1);
+}
+
+export function SendMailNow(arg1) {
+  return window['go']['main']['App']['SendMailNow'](arg1);
+}
+
+export function SendNotificationNow(arg1) {
+  return window['go']['main']['App']['SendNotificationNow'](arg1);
 }
 
 export function SetTaskDueDate(arg1, arg2, arg3) {
@@ -86,8 +158,20 @@ export function SetUpdatePollInterval(arg1) {
   return window['go']['main']['App']['SetUpdatePollInterval'](arg1);
 }
 
+export function TestNotification() {
+  return window['go']['main']['App']['TestNotification']();
+}
+
+export function TestSMTP() {
+  return window['go']['main']['App']['TestSMTP']();
+}
+
 export function ToggleTaskDone(arg1) {
   return window['go']['main']['App']['ToggleTaskDone'](arg1);
+}
+
+export function UnreadNotificationCount() {
+  return window['go']['main']['App']['UnreadNotificationCount']();
 }
 
 export function UpdateNote(arg1) {

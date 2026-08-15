@@ -22,11 +22,12 @@ type App struct {
 	pendingH atomic.Int64
 
 	updater *Updater
+	mailer  *Mailer
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{updater: NewUpdater()}
+	return &App{updater: NewUpdater(), mailer: NewMailer()}
 }
 
 func (a *App) startup(ctx context.Context) {
@@ -38,12 +39,22 @@ func (a *App) startup(ctx context.Context) {
 		panic(err)
 	}
 	a.db = db
+	_ = runtime.InitializeNotifications(ctx)
+	runtime.OnNotificationResponse(ctx, func(result runtime.NotificationResult) {
+		runtime.WindowUnminimise(ctx)
+		runtime.WindowShow(ctx)
+		runtime.WindowSetAlwaysOnTop(ctx, true)
+		runtime.WindowSetAlwaysOnTop(ctx, false)
+	})
 	a.updater.Start(ctx, db)
+	a.mailer.Start(ctx, db, a.ListTasks, a.ListProjects)
 }
 
 // shutdown is called when the app terminates, giving us a chance to close the db.
 func (a *App) shutdown(ctx context.Context) {
+	a.mailer.Stop()
 	a.updater.Stop(true)
+	runtime.CleanupNotifications(ctx)
 	if a.db != nil {
 		a.db.Close()
 	}

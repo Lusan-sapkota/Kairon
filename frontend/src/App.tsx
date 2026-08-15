@@ -2,7 +2,7 @@ import {useCallback, useEffect, useState} from 'react';
 import './App.css';
 import {api} from './api';
 import {EventsOn} from '../wailsjs/runtime/runtime';
-import type {UpdateInfo} from './types';
+import type {AppNotification, UpdateInfo} from './types';
 import {Sidebar} from './components/Sidebar';
 import {AllTasksView} from './components/AllTasksView';
 import {ProjectView} from './components/ProjectView';
@@ -10,6 +10,9 @@ import {BoardView} from './components/BoardView';
 import {CalendarView} from './components/CalendarView';
 import {NotesView} from './components/NotesView';
 import {TaskDetail} from './components/TaskDetail';
+import {SettingsView} from './components/SettingsView';
+import {HistoryView} from './components/HistoryView';
+import {NotificationPanel} from './components/NotificationPanel';
 import {ConfirmDialog} from './components/ConfirmDialog';
 import type {Note, Project, Task, View} from './types';
 
@@ -30,6 +33,9 @@ function App() {
     const [toast, setToast] = useState('');
     const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
     const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
+    const [notifyOpen, setNotifyOpen] = useState(false);
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const refreshAll = useCallback(async () => {
         const [p, t, n] = await Promise.all([api.listProjects(), api.listTasks(), api.listNotes()]);
@@ -61,6 +67,21 @@ function App() {
             setUpdateInfo(info);
         });
     }, []);
+
+    const refreshNotifications = useCallback(async () => {
+        const [items, count] = await Promise.all([api.listNotifications(), api.unreadNotificationCount()]);
+        setNotifications(items ?? []);
+        setUnreadCount(count ?? 0);
+    }, []);
+
+    useEffect(() => {
+        refreshNotifications().catch(() => {});
+        return EventsOn('app_notification', (item: AppNotification) => {
+            setNotifications((cur) => [item, ...cur.filter((n) => n.id !== item.id)].slice(0, 400));
+            setUnreadCount((n) => n + (item.read ? 0 : 1));
+            if (item.title) setToast(item.title);
+        });
+    }, [refreshNotifications]);
 
     const handleDismissUpdate = useCallback(() => {
         api.dismissUpdate().catch(() => {});
@@ -314,6 +335,41 @@ function App() {
                 onDelete={handleDeleteNote}
             />
         );
+    } else if (view.kind === 'settings') {
+        content = <SettingsView updateInfo={updateInfo} />;
+    } else if (view.kind === 'history') {
+        content = (
+            <HistoryView
+                items={notifications}
+                unreadCount={unreadCount}
+                onRead={(id) => {
+                    api.markNotificationRead(id)
+                        .then(refreshNotifications)
+                        .catch(() => {});
+                }}
+                onReadAll={() => {
+                    api.markAllNotificationsRead()
+                        .then(refreshNotifications)
+                        .catch(() => {});
+                }}
+                onDelete={(id) => {
+                    api.deleteNotification(id)
+                        .then(refreshNotifications)
+                        .catch(() => {});
+                }}
+                onClear={() => {
+                    setPendingConfirm({
+                        title: 'Clear history',
+                        message: "Remove every alert from history? This can't be undone.",
+                        onConfirm: () => {
+                            api.clearNotifications()
+                                .then(refreshNotifications)
+                                .catch(() => {});
+                        },
+                    });
+                }}
+            />
+        );
     } else {
         const project = projects.find((p) => p.id === view.projectId);
         const projectTasks = tasks.filter((t) => t.projectId === view.projectId);
@@ -339,7 +395,12 @@ function App() {
                 projects={projects}
                 tasks={tasks}
                 view={view}
+                unreadCount={unreadCount}
                 onSelectView={setView}
+                onOpenNotifications={() => {
+                    setNotifyOpen(true);
+                    refreshNotifications().catch(() => {});
+                }}
                 onAddProject={handleAddProject}
                 onUpdateProject={handleUpdateProject}
                 onDeleteProject={handleDeleteProject}
@@ -389,6 +450,29 @@ function App() {
                     onClose={() => setSelectedTaskId(null)}
                     onSave={handleSaveTask}
                     onDelete={handleDeleteTask}
+                />
+            )}
+
+            {notifyOpen && (
+                <NotificationPanel
+                    items={notifications}
+                    onClose={() => setNotifyOpen(false)}
+                    onRead={(id) => {
+                        api.markNotificationRead(id)
+                            .then(refreshNotifications)
+                            .catch(() => {});
+                    }}
+                    onReadAll={() => {
+                        api.markAllNotificationsRead()
+                            .then(refreshNotifications)
+                            .catch(() => {});
+                    }}
+                    onClear={() => {
+                        api.clearNotifications()
+                            .then(refreshNotifications)
+                            .catch(() => {});
+                    }}
+                    onOpenHistory={() => setView({kind: 'history'})}
                 />
             )}
 

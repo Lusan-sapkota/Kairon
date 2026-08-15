@@ -6,6 +6,8 @@ export function ApplyUpdateAndRestart():Promise<void>;
 
 export function CheckForUpdates():Promise<void>;
 
+export function ClearNotifications():Promise<void>;
+
 export function CreateNote(arg1:main.NoteInput):Promise<main.Note>;
 
 export function CreateProject(arg1:main.ProjectInput):Promise<main.Project>;
@@ -14,13 +16,23 @@ export function CreateTask(arg1:main.TaskInput):Promise<main.Task>;
 
 export function DeleteNote(arg1:number):Promise<void>;
 
+export function DeleteNotification(arg1:number):Promise<void>;
+
 export function DeleteProject(arg1:number):Promise<void>;
 
 export function DeleteTask(arg1:number):Promise<void>;
 
+export function DesktopNotificationsAvailable():Promise<boolean>;
+
 export function DismissUpdate():Promise<void>;
 
 export function ExportTasksCSV():Promise<string>;
+
+export function GetMailQueueStats():Promise<main.MailQueueStats>;
+
+export function GetMailSettings():Promise<main.MailSettings>;
+
+export function GetNotifyPrefs():Promise<main.NotifyPrefs>;
 
 export function GetUpdateInfo():Promise<main.UpdateInfo>;
 
@@ -28,15 +40,39 @@ export function GetUpdateSettings():Promise<main.UpdateSettings>;
 
 export function GetVersion():Promise<string>;
 
+export function ListMailQueue():Promise<Array<main.MailQueueItem>>;
+
 export function ListNotes():Promise<Array<main.Note>>;
+
+export function ListNotifications():Promise<Array<main.AppNotification>>;
 
 export function ListProjects():Promise<Array<main.Project>>;
 
 export function ListTasks():Promise<Array<main.Task>>;
 
+export function MarkAllNotificationsRead():Promise<void>;
+
+export function MarkNotificationRead(arg1:number):Promise<void>;
+
 export function OpenUpdatePackage():Promise<void>;
 
+export function PurgeMailQueue():Promise<void>;
+
 export function RefitWindow(arg1:number,arg2:number):Promise<void>;
+
+export function RetryAllMail():Promise<void>;
+
+export function RetryMailItem(arg1:number):Promise<void>;
+
+export function SaveMailPrefs(arg1:main.MailPrefs):Promise<void>;
+
+export function SaveNotifyPrefs(arg1:main.NotifyPrefs):Promise<void>;
+
+export function SaveSMTPConfig(arg1:main.SMTPConfig):Promise<void>;
+
+export function SendMailNow(arg1:string):Promise<void>;
+
+export function SendNotificationNow(arg1:string):Promise<void>;
 
 export function SetTaskDueDate(arg1:number,arg2:any,arg3:number):Promise<main.Task>;
 
@@ -44,7 +80,13 @@ export function SetTaskProject(arg1:number,arg2:any,arg3:number):Promise<main.Ta
 
 export function SetUpdatePollInterval(arg1:string):Promise<void>;
 
+export function TestNotification():Promise<void>;
+
+export function TestSMTP():Promise<void>;
+
 export function ToggleTaskDone(arg1:number):Promise<main.Task>;
+
+export function UnreadNotificationCount():Promise<number>;
 
 export function UpdateNote(arg1:main.NoteInput):Promise<main.Note>;
 

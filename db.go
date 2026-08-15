@@ -45,6 +45,39 @@ CREATE TABLE IF NOT EXISTS settings (
 	key   TEXT PRIMARY KEY,
 	value TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS mail_queue (
+	id              INTEGER PRIMARY KEY AUTOINCREMENT,
+	kind            TEXT NOT NULL,
+	dedupe_key      TEXT NOT NULL DEFAULT '',
+	recipient       TEXT NOT NULL,
+	subject         TEXT NOT NULL,
+	body_text       TEXT NOT NULL DEFAULT '',
+	body_html       TEXT NOT NULL DEFAULT '',
+	status          TEXT NOT NULL DEFAULT 'pending',
+	attempts        INTEGER NOT NULL DEFAULT 0,
+	max_attempts    INTEGER NOT NULL DEFAULT 8,
+	next_attempt_at TEXT NOT NULL,
+	expires_at      TEXT NOT NULL,
+	last_error      TEXT NOT NULL DEFAULT '',
+	created_at      TEXT NOT NULL,
+	sent_at         TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_mail_queue_status ON mail_queue (status, next_attempt_at);
+CREATE INDEX IF NOT EXISTS idx_mail_queue_dedupe ON mail_queue (dedupe_key, status);
+
+CREATE TABLE IF NOT EXISTS notifications (
+	id         INTEGER PRIMARY KEY AUTOINCREMENT,
+	kind       TEXT NOT NULL,
+	title      TEXT NOT NULL,
+	body       TEXT NOT NULL DEFAULT '',
+	dedupe_key TEXT NOT NULL DEFAULT '',
+	read       INTEGER NOT NULL DEFAULT 0,
+	created_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications (read, created_at);
 `
 
 func openDB() (*sql.DB, error) {
@@ -135,5 +168,67 @@ func migrate(db *sql.DB) error {
 		}
 	}
 
+	if err := ensureMailQueue(db); err != nil {
+		return err
+	}
+	if err := ensureNotifications(db); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func ensureMailQueue(db *sql.DB) error {
+	var n int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='mail_queue'`).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	_, err := db.Exec(`
+		CREATE TABLE mail_queue (
+			id              INTEGER PRIMARY KEY AUTOINCREMENT,
+			kind            TEXT NOT NULL,
+			dedupe_key      TEXT NOT NULL DEFAULT '',
+			recipient       TEXT NOT NULL,
+			subject         TEXT NOT NULL,
+			body_text       TEXT NOT NULL DEFAULT '',
+			body_html       TEXT NOT NULL DEFAULT '',
+			status          TEXT NOT NULL DEFAULT 'pending',
+			attempts        INTEGER NOT NULL DEFAULT 0,
+			max_attempts    INTEGER NOT NULL DEFAULT 8,
+			next_attempt_at TEXT NOT NULL,
+			expires_at      TEXT NOT NULL,
+			last_error      TEXT NOT NULL DEFAULT '',
+			created_at      TEXT NOT NULL,
+			sent_at         TEXT
+		);
+		CREATE INDEX IF NOT EXISTS idx_mail_queue_status ON mail_queue (status, next_attempt_at);
+		CREATE INDEX IF NOT EXISTS idx_mail_queue_dedupe ON mail_queue (dedupe_key, status);
+	`)
+	return err
+}
+
+func ensureNotifications(db *sql.DB) error {
+	var n int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='notifications'`).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	_, err := db.Exec(`
+		CREATE TABLE notifications (
+			id         INTEGER PRIMARY KEY AUTOINCREMENT,
+			kind       TEXT NOT NULL,
+			title      TEXT NOT NULL,
+			body       TEXT NOT NULL DEFAULT '',
+			dedupe_key TEXT NOT NULL DEFAULT '',
+			read       INTEGER NOT NULL DEFAULT 0,
+			created_at TEXT NOT NULL
+		);
+		CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications (read, created_at);
+	`)
+	return err
 }

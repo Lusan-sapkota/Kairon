@@ -52,6 +52,7 @@ Shown on:
 | Sidebar project row | Full project name |
 | Sidebar pencil / X | Edit project / Delete project |
 | Sidebar chevrons | Expand sidebar / Collapse sidebar |
+| Notifications | Open the in-app inbox |
 | Theme control | `Theme: System\|Light\|Dark (click to change)` |
 | Board ← / → | Previous day / Next day |
 | Board empty column space | Double-click to add a task |
@@ -80,18 +81,37 @@ These stay hidden until you hover the parent row:
 
 | Action | Result |
 | --- | --- |
-| Click **Board / Calendar / Notes / All Tasks** | Switch main view |
+| Click **Board / Calendar / Notes / All Tasks / History / Settings** | Switch main view
 | Click a **project** | Open that project’s page |
 | Click a **tag chip** | Filter projects to that tag; click again to clear |
 | Click **+** next to Projects | New project modal |
 | Hover project → **pencil** | Edit name, color, tags |
 | Hover project → **X** | Delete project (confirm). Tasks in that project move to **Inbox** (no project) |
+| Click **Settings** | Open updates, app notifications, SMTP, and the mail queue |
+| Click **History** | Full alert history (search, filter, delete) |
+| Click **Notifications** | Open the in-app notification inbox
 | Click **collapse / expand** | Narrow icon rail or full sidebar (remembered) |
 | Click **Theme** | Cycle **System → Light → Dark → System** (remembered) |
 
 When collapsed: labels hide; icon `title` tooltips still name each destination. Project list names hide until expanded.
 
-Open-task count badge on **Board** shows how many tasks are not done.
+Open-task count badge on **Board** shows how many tasks are not done. Unread alert count shows on **History**.
+
+---
+
+## History
+
+Open **History** from the sidebar (below All Tasks) for the full alert archive — up to 400 items, grouped by day.
+
+| Action | Result |
+| --- | --- |
+| Search | Filter by title / body / type |
+| Chips | All, Unread, Daily, Weekly, Reminders, Tests |
+| Click an unread item | Mark it read |
+| Hover → trash | Remove that alert |
+| **Mark all read** / **Clear history** | Bulk actions (clear asks to confirm) |
+
+The sidebar **bell** still opens a quick inbox; **History** in that panel jumps to this page.
 
 ---
 
@@ -299,6 +319,51 @@ No global command palette  navigation is sidebar + in-view controls.
 | Sidebar collapsed | `localStorage` → `kairon.sidebarCollapsed` |
 
 Board greeting art: **inverted** mark in dark mode, **normal** mark in light mode.
+
+---
+
+## Settings
+
+Open **Settings** from the sidebar (below History). Sections live in a left rail: **Updates**, **Notifications**, **Email**, **Mail queue**.
+
+### Updates
+
+Choose how often Kairon checks GitHub Releases, or click **Check now**. Downloaded updates still apply from the banner at the top.
+
+### Application notifications
+
+Turn **Enable notifications** on, then choose **In-app** (bell + inbox) and/or **Desktop** (OS toasts). No SMTP needed.
+
+Pick the same style of daily / weekly / due reminders as email. **Send test** fires both channels immediately. The sidebar bell shows unread count; open it to mark read or jump to **History**. The History page keeps a searchable archive.
+
+If the app wasn’t running at the scheduled time, the next launch **after** that clock time still delivers that day’s summary.
+
+### Email (SMTP)
+
+Credentials stay in local SQLite (`planner.db`) on this machine. Typical Gmail setup: host `smtp.gmail.com`, port `587`, STARTTLS, username = your address, password = an [app password](https://support.google.com/accounts/answer/185833).
+
+- **Save SMTP** stores the server.
+- **Send test** queues a test message and tries immediately. If you’re offline, it stays in the queue.
+
+### Alerts & reports
+
+Turn **Enable email notifications** on, then pick:
+
+| Alert | What you get |
+| --- | --- |
+| Daily report | Snapshot of overdue / due today / due tomorrow (at a time you choose) |
+| Weekly report | Completed this week vs still open (weekday + time) |
+| Due reminders | “Time is running out” digest: overdue, due today, due in 1/2/3 days |
+
+If the app wasn’t running at the scheduled time, the next launch **after** that clock time still queues that day’s mail.
+
+Queued mail is kept for **12h / 24h / 48h / 7 days**, then marked expired. Offline or SMTP blips retry with backoff (2 minutes up to 6 hours). Permanent auth errors fail immediately.
+
+Use **Send daily/weekly/reminder now** to queue without waiting for the clock.
+
+### Mail queue
+
+Shows pending, failed, expired, and sent items. **Retry** one row or **Retry all**. **Clear history** drops sent/failed/expired (pending stay).
 
 ---
 
